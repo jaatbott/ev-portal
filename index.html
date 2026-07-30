@@ -4,42 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EV Duniya - Latest Electric Cars</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 font-sans text-gray-800">
 
-    <!-- Navigation Bar -->
     <nav class="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
         <div class="container mx-auto flex justify-between items-center">
             <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
                 EV Duniya
             </h1>
-            <!-- Admin Panel Link -->
-           <a href="my-secret-admin.html" class="text-sm text-gray-400 hover:text-white transition">Admin Panel</a>
-
         </div>
     </nav>
 
-    <!-- Main Content Area -->
     <div class="container mx-auto p-6 md:p-10">
         <div class="text-center mb-12">
             <h2 class="text-4xl font-bold mb-3">Explore Electric Vehicles</h2>
             <p class="text-gray-500">Find the perfect EV for your daily commute.</p>
         </div>
 
-        <!-- Car Cards Container -->
         <div id="car-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <!-- Loading Indicator -->
             <p class="text-center text-gray-500 col-span-full animate-pulse">Fetching latest cars from database...</p>
         </div>
     </div>
 
-    <!-- JavaScript to Fetch and Display Cars -->
     <script>
         async function loadCars() {
             try {
-                // '?t=' + new Date().getTime() is added to bypass browser cache automatically
                 const response = await fetch('data/cars.json?t=' + new Date().getTime());
                 const cars = await response.json();
                 
@@ -47,7 +37,7 @@
                 carList.innerHTML = ''; // Clear the loading text
 
                 if (cars.length === 0) {
-                    carList.innerHTML = '<p class="text-center text-gray-500 col-span-full">No cars available yet. Add some from the Admin Panel!</p>';
+                    carList.innerHTML = '<p class="text-center text-gray-500 col-span-full">No cars available yet.</p>';
                     return;
                 }
 
@@ -82,11 +72,10 @@
                 });
             } catch (error) {
                 console.error("Error loading cars:", error);
-                document.getElementById('car-list').innerHTML = '<p class="text-center text-red-500 col-span-full">Error loading data. Make sure cars.json has valid data.</p>';
+                document.getElementById('car-list').innerHTML = '<p class="text-center text-red-500 col-span-full">Error loading data.</p>';
             }
         }
 
-        // Run the function as soon as the page loads
         loadCars();
     </script>
 </body>
