@@ -3,47 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="meta-title">Loading...</title>
-    <meta name="description" id="meta-desc" content="">
+    <title>EV Duniya - Latest Electric Cars</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans">
-    
-    <!-- HEADER WITH LOGO -->
-    <header class="bg-white shadow-sm sticky top-0 z-50 p-4">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <a href="index.html" class="flex items-center gap-3">
-                <img id="site-logo" src="" alt="Logo" class="h-10 hidden">
-                <h1 class="text-2xl font-bold text-blue-600" id="site-name">EV Portal</h1>
-            </a>
-            <nav class="space-x-4">
-                <a href="index.html" class="hover:text-blue-600">Home</a>
-            </nav>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
+                EV Duniya
+            </h1>
+            <!-- Admin Panel Link -->
+            <a href="my-secret-admin.html" class="text-sm text-gray-400 hover:text-white transition">Admin Panel</a>
         </div>
-    </header>
+    </nav>
 
-    <main class="max-w-6xl mx-auto p-4 mt-8">
-        <h2 class="text-2xl font-bold mb-6 border-b pb-2">Welcome to EV Portal</h2>
-        <div id="cars-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"></div>
-    </main>
+    <!-- Main Content Area -->
+    <div class="container mx-auto p-6 md:p-10">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold mb-3">Explore Electric Vehicles</h2>
+            <p class="text-gray-500">Find the perfect EV for your daily commute.</p>
+        </div>
 
+        <!-- Car Cards Container -->
+        <div id="car-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Loading Indicator -->
+            <p class="text-center text-gray-500 col-span-full animate-pulse">Fetching latest cars from database...</p>
+        </div>
+    </div>
+
+    <!-- JavaScript to Fetch and Display Cars -->
     <script>
-        fetch('data/settings.json').then(r => r.json()).then(settings => {
-            document.getElementById('meta-title').innerText = settings.global_seo_title;
-            document.getElementById('meta-desc').content = settings.global_seo_desc;
-            
-            const logoEl = document.getElementById('site-logo');
-            const nameEl = document.getElementById('site-name');
-            
-            // Logo Logic
-            if(settings.logo_url) {
-                logoEl.src = settings.logo_url;
-                logoEl.classList.remove('hidden');
-                nameEl.classList.add('hidden'); // Hide text if logo exists
-            } else {
-                nameEl.innerText = settings.website_name;
+        async function loadCars() {
+            try {
+                // '?t=' + new Date().getTime() is added to bypass browser cache automatically
+                const response = await fetch('data/cars.json?t=' + new Date().getTime());
+                const cars = await response.json();
+                
+                const carList = document.getElementById('car-list');
+                carList.innerHTML = ''; // Clear the loading text
+
+                if (cars.length === 0) {
+                    carList.innerHTML = '<p class="text-center text-gray-500 col-span-full">No cars available yet. Add some from the Admin Panel!</p>';
+                    return;
+                }
+
+                // Loop through each car in the JSON and create a visual card
+                cars.forEach(car => {
+                    const carCard = `
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                            <img src="${car.image || 'https://images.unsplash.com/photo-1593941707882-a5bba14938cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}" alt="${car.name}" class="w-full h-56 object-cover bg-gray-200">
+                            <div class="p-6">
+                                <div class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">${car.brand}</div>
+                                <h3 class="text-2xl font-bold text-gray-900 mb-4">${car.name}</h3>
+                                
+                                <div class="grid grid-cols-2 gap-4 mb-6">
+                                    <div class="bg-gray-50 p-3 rounded-lg text-center border">
+                                        <div class="text-xs text-gray-500 uppercase">Battery</div>
+                                        <div class="font-bold text-gray-800">${car.battery_kwh} <span class="text-sm font-normal">kWh</span></div>
+                                    </div>
+                                    <div class="bg-gray-50 p-3 rounded-lg text-center border">
+                                        <div class="text-xs text-gray-500 uppercase">Range</div>
+                                        <div class="font-bold text-gray-800">${car.range_km} <span class="text-sm font-normal">km</span></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between items-center border-t pt-4">
+                                    <div class="text-sm text-gray-500">Estimated Price</div>
+                                    <div class="text-xl font-extrabold text-green-600">${car.price}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    carList.innerHTML += carCard;
+                });
+            } catch (error) {
+                console.error("Error loading cars:", error);
+                document.getElementById('car-list').innerHTML = '<p class="text-center text-red-500 col-span-full">Error loading data. Make sure cars.json has valid data.</p>';
             }
-        });
+        }
+
+        // Run the function as soon as the page loads
+        loadCars();
     </script>
 </body>
 </html>
