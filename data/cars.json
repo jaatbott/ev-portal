@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "id": 1785427152621,
+    "name": "Tata ev ",
+    "brand": "Tata",
+    "range_km": 500,
+    "battery_kwh": 50,
+    "price": "14.99 lakhs",
+    "image": "https://imgd.aeplcdn.com/664x374/n/cw/ec/139585/harrier-ev-exterior-right-front-three-quarter-58.png?isig=0&q=80"
+  }
+]
