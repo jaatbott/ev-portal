@@ -1,8 +1,15 @@
 {
-  "website_name": "EV Duniya",
-  "logo_url": "https://dummyimage.com/150x50/2563eb/ffffff&text=EV+Duniya",
-  "global_seo_title": "Top EV Cars in India | Electric Vehicle Reviews",
-  "global_seo_desc": "Compare electric cars, check real range, price, and specs.",
+  "website_name": "VoltIndia",
+  "site_url": "https://yourusername.github.io/ev-portal",
+  "global_seo_title": "VoltIndia — Electric Car Prices, Range & Reviews in India",
+  "global_seo_desc": "Compare electric car prices, range, battery specs and reviews. India's independent EV buying guide.",
   "adsense_client_id": "",
-  "ads_enabled": false
+  "analytics_id": "",
+  "search_console_meta": "",
+  "ads_enabled": false,
+  "web3forms_access_key": "",
+  "giscus_repo": "",
+  "giscus_repo_id": "",
+  "giscus_category": "",
+  "giscus_category_id": ""
 }
