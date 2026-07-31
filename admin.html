@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — EV Portal</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<style>
+  body{background:var(--paper)}
+  .admin-shell{display:flex;min-height:100vh}
+  .sidebar{width:230px;flex-shrink:0;background:var(--paper-raised);border-right:1px solid var(--line);padding:20px 14px;position:sticky;top:0;height:100vh}
+  .sidebar .brand{padding:0 10px 20px}
+  .side-link{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:14px;font-weight:500;color:var(--ink-soft);cursor:pointer;margin-bottom:2px}
+  .side-link:hover{background:var(--paper)}
+  .side-link.active{background:var(--volt-soft);color:var(--volt-ink);font-weight:600}
+  .main{flex:1;padding:32px 40px;max-width:980px}
+  .admin-panel{display:none}
+  .admin-panel.active{display:block}
+  .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+  .panel-head h2{font-size:22px}
+  .list-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;background:#fff}
+  .list-row .name{font-weight:600;font-size:14.5px}
+  .list-row .sub{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+  .list-row .actions{display:flex;gap:8px}
+  .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(20,23,26,.5);z-index:100;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 16px}
+  .modal-backdrop.open{display:flex}
+  .modal{background:#fff;border-radius:16px;padding:28px;max-width:640px;width:100%}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px;color:var(--ink-soft)}
+  .field input[type=text],.field input[type=number],.field input[type=url],.field textarea,.field select{
+    width:100%;padding:10px 12px;border:1px solid var(--line-strong);border-radius:8px;font-size:14px;font-family:var(--font-body);
+  }
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .img-thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .img-thumbs .t{position:relative;width:70px;height:70px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+  .img-thumbs .t img{width:100%;height:100%;object-fit:cover}
+  .img-thumbs .t button{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:0;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:8px;font-size:13.5px;z-index:200;display:none}
+  .toast.show{display:block}
+  .toast.error{background:var(--danger)}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--volt-soft);color:var(--volt-ink);padding:6px 12px;border-radius:999px;font-size:13px;margin:4px 6px 0 0}
+  .chip button{border:0;background:none;cursor:pointer;color:var(--volt-ink);font-weight:700}
+  .ql-editor{min-height:180px}
+  .login-wrap{max-width:420px;margin:80px auto;padding:0 20px}
+  .login-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px}
+  .helper{font-size:12px;color:var(--muted);margin-top:6px}
+  .save-bar{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<!-- ============== LOGIN ============== -->
+<div class="login-wrap" id="loginScreen">
+  <div style="text-align:center;margin-bottom:24px"><span style="font-size:28px">⚡</span></div>
+  <div class="login-card">
+    <h2 style="margin-bottom:4px">Admin sign-in</h2>
+    <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:22px">Connects directly to your GitHub repo. Your token stays in this browser only.</p>
+    <div class="field"><label>GitHub username / org</label><input type="text" id="loginOwner" placeholder="yourusername"></div>
+    <div class="field"><label>Repository name</label><input type="text" id="loginRepo" placeholder="ev-portal"></div>
+    <div class="field"><label>Branch</label><input type="text" id="loginBranch" value="main"></div>
+    <div class="field">
+      <label>Personal Access Token</label>
+      <input type="text" id="loginToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+      <p class="helper">Needs "repo" (Contents: Read & write) scope. Create one at GitHub → Settings → Developer settings → Personal access tokens.</p>
+    </div>
+    <button class="btn btn-primary btn-block" id="loginBtn">Connect</button>
+    <p id="loginError" style="color:var(--danger);font-size:13px;margin-top:12px;display:none"></p>
+  </div>
+</div>
+
+<!-- ============== ADMIN APP ============== -->
+<div class="admin-shell" id="adminApp" style="display:none">
+  <aside class="sidebar">
+    <div class="brand"><span style="color:var(--volt)">⚡</span> Admin</div>
+    <div class="side-link active" data-tab="cars">🚗 Cars</div>
+    <div class="side-link" data-tab="blogs">📝 Blogs</div>
+    <div class="side-link" data-tab="pages">📄 Pages</div>
+    <div class="side-link" data-tab="categories">🏷️ Categories</div>
+    <div class="side-link" data-tab="settings">⚙️ SEO & Settings</div>
+    <div style="margin-top:30px;border-top:1px solid var(--line);padding-top:14px">
+      <div class="side-link" id="viewSiteBtn">↗ View site</div>
+      <div class="side-link" id="logoutBtn" style="color:var(--danger)">⏻ Log out</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- CARS -->
+    <section class="admin-panel active" id="panel-cars">
+      <div class="panel-head"><h2>Cars</h2><button class="btn btn-primary btn-sm" id="addCarBtn">+ Add car</button></div>
+      <div id="carsList"></div>
+    </section>
+
+    <!-- BLOGS -->
+    <section class="admin-panel" id="panel-blogs">
+      <div class="panel-head"><h2>Blog posts</h2><button class="btn btn-primary btn-sm" id="addBlogBtn">+ New post</button></div>
+      <div id="blogsList"></div>
+    </section>
+
+    <!-- PAGES -->
+    <section class="admin-panel" id="panel-pages">
+      <div class="panel-head"><h2>Static pages</h2><button class="btn btn-primary btn-sm" id="addPageBtn">+ Add page</button></div>
+      <div id="pagesList"></div>
+    </section>
+
+    <!-- CATEGORIES -->
+    <section class="admin-panel" id="panel-categories">
+      <div class="panel-head"><h2>Categories</h2></div>
+      <div class="list-row" style="display:block">
+        <label style="font-weight:600;font-size:13.5px">Car categories</label>
+        <div id="carCatChips"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <input type="text" id="newCarCat" placeholder="e.g. Coupe" style="flex:1;padding:9px 12px;border:1px solid var(--line-strong);border-radius:8px">
+          <button class="btn btn-ghost btn-sm" id="addCarCatBtn">Add</button>
+        </div>
+      </div>
+      <div class="list-row" style="display:block">
+        <label style="font-weight:600;font-size:13.5px">Blog categories</label>
+        <div id="blogCatChips"></div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <input type="text" id="newBlogCat" placeholder="e.g. Tech" style="flex:1;padding:9px 12px;border:1px solid var(--line-strong);border-radius:8px">
+          <button class="btn btn-ghost btn-sm" id="addBlogCatBtn">Add</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="admin-panel" id="panel-settings">
+      <div class="panel-head"><h2>SEO & Settings</h2></div>
+
+      <div class="list-row" style="display:block">
+        <h3 style="font-size:15px;margin-bottom:14px">General</h3>
+        <div class="field"><label>Website name</label><input type="text" id="s_website_name"></div>
+        <div class="field"><label>Site URL (your live GitHub Pages URL, no trailing slash)</label><input type="text" id="s_site_url" placeholder="https://yourusername.github.io/ev-portal"></div>
+        <div class="field"><label>Global SEO title</label><input type="text" id="s_global_seo_title"></div>
+        <div class="field"><label>Global SEO description</label><textarea id="s_global_seo_desc" rows="2"></textarea></div>
+      </div>
+
+      <div class="list-row" style="display:block">
+        <h3 style="font-size:15px;margin-bottom:14px">Monetization & Tracking</h3>
+        <div class="field"><label>Google AdSense Client ID</label><input type="text" id="s_adsense" placeholder="ca-pub-xxxxxxxxxxxxxxxx"></div>
+        <div class="field"><label><input type="checkbox" id="s_ads_enabled" style="width:auto;margin-right:8px">Show ads on site</label></div>
+        <div class="field"><label>Google Analytics (GA4) ID</label><input type="text" id="s_analytics" placeholder="G-XXXXXXXXXX"></div>
+        <div class="field"><label>Search Console verification meta value</label><input type="text" id="s_search_console"></div>
+      </div>
+
+      <div class="list-row" style="display:block">
+        <h3 style="font-size:15px;margin-bottom:14px">Integrations</h3>
+        <div class="field"><label>Web3Forms access key (contact form)</label><input type="text" id="s_web3forms"></div>
+        <div class="field-row">
+          <div class="field"><label>Giscus repo (owner/repo)</label><input type="text" id="s_giscus_repo"></div>
+          <div class="field"><label>Giscus repo ID</label><input type="text" id="s_giscus_repo_id"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Giscus category</label><input type="text" id="s_giscus_category"></div>
+          <div class="field"><label>Giscus category ID</label><input type="text" id="s_giscus_category_id"></div>
+        </div>
+        <p class="helper">Get Giscus values from giscus.app after enabling Discussions on your repo.</p>
+      </div>
+
+      <button class="btn btn-primary" id="saveSettingsBtn">Save settings</button>
+
+      <div class="list-row" style="display:block;margin-top:28px">
+        <h3 style="font-size:15px;margin-bottom:6px">robots.txt</h3>
+        <textarea id="robotsTxt" rows="6" style="width:100%;font-family:var(--font-mono);font-size:13px;padding:10px;border:1px solid var(--line-strong);border-radius:8px"></textarea>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px" id="saveRobotsBtn">Save robots.txt</button>
+      </div>
+
+      <div class="list-row" style="display:block">
+        <h3 style="font-size:15px;margin-bottom:6px">ads.txt</h3>
+        <textarea id="adsTxt" rows="4" style="width:100%;font-family:var(--font-mono);font-size:13px;padding:10px;border:1px solid var(--line-strong);border-radius:8px"></textarea>
+        <button class="btn btn-ghost btn-sm" style="margin-top:10px" id="saveAdsBtn">Save ads.txt</button>
+      </div>
+
+      <div class="list-row" style="display:block">
+        <h3 style="font-size:15px;margin-bottom:6px">sitemap.xml</h3>
+        <p class="helper" style="margin-bottom:10px">Regenerates from every published car, blog post and page, and pushes it to the repo root.</p>
+        <button class="btn btn-amber btn-sm" id="regenSitemapBtn">Regenerate & push sitemap.xml</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modalBody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="js/github-api.js"></script>
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+let gh = null;
+let state = { cars: [], blogs: [], pages: [], settings: {}, categories: { car: [], blog: [] } };
+let shas = { cars: null, blogs: null, pages: null, settings: null, categories: null };
+let quillBlog = null, quillPage = null;
+let editingImages = [];
+
+// ---------------- Login ----------------
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const owner = document.getElementById('loginOwner').value.trim();
+  const repo = document.getElementById('loginRepo').value.trim();
+  const branch = document.getElementById('loginBranch').value.trim() || 'main';
+  const token = document.getElementById('loginToken').value.trim();
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+
+  if (!owner || !repo || !token) {
+    errEl.textContent = 'Please fill in all fields.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const btn = document.getElementById('loginBtn');
+  btn.textContent = 'Connecting…';
+  btn.disabled = true;
+  try {
+    gh = new GitHubAPI({ owner, repo, branch, token });
+    await gh.testConnection();
+    saveSession({ owner, repo, branch, token });
+    await bootAdmin();
+  } catch (e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+  } finally {
+    btn.textContent = 'Connect';
+    btn.disabled = false;
+  }
+});
+
+async function tryResumeSession() {
+  const s = loadSession();
+  if (!s) return;
+  gh = new GitHubAPI(s);
+  try {
+    await gh.testConnection();
+    await bootAdmin();
+  } catch (e) {
+    clearSession();
+    gh = null;
+  }
+}
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  clearSession();
+  location.reload();
+});
+document.getElementById('viewSiteBtn').addEventListener('click', () => window.open('index.html', '_blank'));
+
+// ---------------- Boot ----------------
+async function bootAdmin() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'flex';
+  await loadAllFromRepo();
+  renderCarsList();
+  renderBlogsList();
+  renderPagesList();
+  renderCategoryChips();
+  fillSettingsForm();
+}
+
+async function loadAllFromRepo() {
+  const [cars, blogs, pages, settings, categories] = await Promise.all([
+    gh.getJSON('data/cars.json'),
+    gh.getJSON('data/blogs.json'),
+    gh.getJSON('data/pages.json'),
+    gh.getJSON('data/settings.json'),
+    gh.getJSON('data/categories.json'),
+  ]);
+  state.cars = cars.data || [];
+  shas.cars = cars.sha;
+  state.blogs = blogs.data || [];
+  shas.blogs = blogs.sha;
+  state.pages = pages.data || [];
+  shas.pages = pages.sha;
+  state.settings = settings.data || {};
+  shas.settings = settings.sha;
+  state.categories = categories.data || { car: [], blog: [] };
+  shas.categories = categories.sha;
+
+  const robots = await gh.getFile('robots.txt');
+  document.getElementById('robotsTxt').value = robots ? robots.content : `User-agent: *\nAllow: /\nSitemap: https://${gh.owner}.github.io/${gh.repo}/sitemap.xml`;
+  const ads = await gh.getFile('ads.txt');
+  document.getElementById('adsTxt').value = ads ? ads.content : '';
+}
+
+// ---------------- Tabs ----------------
+document.querySelectorAll('.side-link[data-tab]').forEach(link => {
+  link.addEventListener('click', () => {
+    document.querySelectorAll('.side-link[data-tab]').forEach(l => l.classList.remove('active'));
+    link.classList.add('active');
+    document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + link.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------------- Toast ----------------
+function toast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('open');
+  document.getElementById('modalBody').innerHTML = '';
+}
+document.getElementById('modalBackdrop').addEventListener('click', (e) => {
+  if (e.target.id === 'modalBackdrop') closeModal();
+});
+
+// ============================================================
+// CARS
+// ============================================================
+function renderCarsList() {
+  const el = document.getElementById('carsList');
+  if (!state.cars.length) {
+    el.innerHTML = `<div class="empty-state"><h3>No cars yet</h3><p>Click "Add car" to publish your first EV.</p></div>`;
+    return;
+  }
+  el.innerHTML = state.cars.map(c => `
+    <div class="list-row">
+      <div><div class="name">${c.name}</div><div class="sub">${c.slug} · ${fmtINR(c.price)} · ${c.range} km</div></div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="openCarForm('${c.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCar('${c.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function fmtINR(v) { return v ? '₹' + Number(v).toLocaleString('en-IN') : '—'; }
+
+document.getElementById('addCarBtn').addEventListener('click', () => openCarForm(null));
+
+function openCarForm(id) {
+  const car = id ? state.cars.find(c => c.id === id) : null;
+  editingImages = car ? [...(car.images || [])] : [];
+  const catOptions = state.categories.car.map(c => `<option value="${c}" ${car && car.category === c ? 'selected' : ''}>${c}</option>`).join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    <h3 style="margin-bottom:18px">${car ? 'Edit car' : 'Add car'}</h3>
+    <div class="field"><label>Car name</label><input type="text" id="f_name" value="${car ? car.name : ''}" oninput="autoSlug()"></div>
+    <div class="field"><label>Slug</label><input type="text" id="f_slug" value="${car ? car.slug : ''}" oninput="this.dataset.touched=true"></div>
+    <div class="field-row">
+      <div class="field"><label>Category</label><select id="f_category"><option value="">Select…</option>${catOptions}</select></div>
+      <div class="field"><label>Price (₹)</label><input type="number" id="f_price" value="${car ? car.price : ''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Range (km)</label><input type="number" id="f_range" value="${car ? car.range : ''}"></div>
+      <div class="field"><label>Battery</label><input type="text" id="f_battery" value="${car ? car.battery : ''}"></div>
+    </div>
+    <div class="field"><label>Charging time</label><input type="text" id="f_charging" value="${car ? car.charging_time : ''}"></div>
+    <div class="field">
+      <label>Images</label>
+      <input type="file" id="f_images" accept="image/*" multiple>
+      <div class="img-thumbs" id="imgThumbs"></div>
+      <p class="helper">Uploads go to /images in your GitHub repo.</p>
+    </div>
+    <div class="field"><label>SEO title</label><input type="text" id="f_seo_title" value="${car ? car.seo_title || '' : ''}"></div>
+    <div class="field"><label>SEO description</label><textarea id="f_seo_desc" rows="2">${car ? car.seo_desc || '' : ''}</textarea></div>
+    <div class="field"><label>Keywords</label><input type="text" id="f_keywords" value="${car ? car.keywords || '' : ''}"></div>
+    <div class="save-bar">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveCarBtn">${car ? 'Save changes' : 'Publish car'}</button>
+    </div>`;
+
+  document.getElementById('f_images').addEventListener('change', handleImageUpload);
+  document.getElementById('saveCarBtn').addEventListener('click', () => saveCar(id));
+  renderImgThumbs();
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+
+function autoSlug() {
+  const slugField = document.getElementById('f_slug');
+  if (!slugField.dataset.touched) slugField.value = slugify(document.getElementById('f_name').value);
+}
+
+function renderImgThumbs() {
+  document.getElementById('imgThumbs').innerHTML = editingImages.map((url, i) => `
+    <div class="t"><img src="${url}"><button onclick="editingImages.splice(${i},1);renderImgThumbs()">✕</button></div>`).join('');
+}
+
+async function handleImageUpload(e) {
+  const files = Array.from(e.target.files);
+  for (const file of files) {
+    try {
+      toast('Uploading ' + file.name + '…');
+      const base64 = await fileToBase64(file);
+      const path = `images/${Date.now()}-${slugify(file.name.replace(/\.[^.]+$/, ''))}${(file.name.match(/\.[^.]+$/) || ['.jpg'])[0]}`;
+      const url = await gh.putImage(path, base64, `Upload image ${path}`);
+      editingImages.push(url);
+      renderImgThumbs();
+      toast('Image uploaded');
+    } catch (err) {
+      toast('Upload failed: ' + err.message, true);
+    }
+  }
+  e.target.value = '';
+}
+
+async function saveCar(id) {
+  const name = document.getElementById('f_name').value.trim();
+  const slug = document.getElementById('f_slug').value.trim() || slugify(name);
+  if (!name) { toast('Car name is required', true); return; }
+
+  const carObj = {
+    id: id || 'car-' + Date.now(),
+    name,
+    slug,
+    category: document.getElementById('f_category').value,
+    price: Number(document.getElementById('f_price').value) || 0,
+    range: Number(document.getElementById('f_range').value) || 0,
+    battery: document.getElementById('f_battery').value,
+    charging_time: document.getElementById('f_charging').value,
+    images: editingImages,
+    seo_title: document.getElementById('f_seo_title').value,
+    seo_desc: document.getElementById('f_seo_desc').value,
+    keywords: document.getElementById('f_keywords').value,
+  };
+
+  const btn = document.getElementById('saveCarBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    if (id) {
+      const idx = state.cars.findIndex(c => c.id === id);
+      state.cars[idx] = carObj;
+    } else {
+      state.cars.push(carObj);
+    }
+    const res = await gh.putJSON('data/cars.json', state.cars, `${id ? 'Update' : 'Add'} car: ${name}`, shas.cars);
+    shas.cars = res.content.sha;
+    renderCarsList();
+    closeModal();
+    toast('Car saved');
+  } catch (err) {
+    toast('Save failed: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+async function deleteCar(id) {
+  if (!confirm('Delete this car listing?')) return;
+  state.cars = state.cars.filter(c => c.id !== id);
+  try {
+    const res = await gh.putJSON('data/cars.json', state.cars, 'Delete car', shas.cars);
+    shas.cars = res.content.sha;
+    renderCarsList();
+    toast('Car deleted');
+  } catch (err) {
+    toast('Delete failed: ' + err.message, true);
+  }
+}
+
+// ============================================================
+// BLOGS
+// ============================================================
+function renderBlogsList() {
+  const el = document.getElementById('blogsList');
+  if (!state.blogs.length) {
+    el.innerHTML = `<div class="empty-state"><h3>No posts yet</h3><p>Click "New post" to publish your first article.</p></div>`;
+    return;
+  }
+  el.innerHTML = state.blogs.map(b => `
+    <div class="list-row">
+      <div><div class="name">${b.title}</div><div class="sub">${b.slug} · ${b.category || ''} · ${b.date || ''}</div></div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="openBlogForm('${b.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteBlog('${b.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('addBlogBtn').addEventListener('click', () => openBlogForm(null));
+
+function openBlogForm(id) {
+  const post = id ? state.blogs.find(b => b.id === id) : null;
+  editingImages = post && post.thumbnail ? [post.thumbnail] : [];
+  const catOptions = state.categories.blog.map(c => `<option value="${c}" ${post && post.category === c ? 'selected' : ''}>${c}</option>`).join('');
+
+  document.getElementById('modalBody').innerHTML = `
+    <h3 style="margin-bottom:18px">${post ? 'Edit post' : 'New post'}</h3>
+    <div class="field"><label>Title</label><input type="text" id="f_title" value="${post ? post.title : ''}" oninput="autoSlugBlog()"></div>
+    <div class="field"><label>Slug</label><input type="text" id="f_slug_b" value="${post ? post.slug : ''}" oninput="this.dataset.touched=true"></div>
+    <div class="field-row">
+      <div class="field"><label>Category</label><select id="f_category_b"><option value="">Select…</option>${catOptions}</select></div>
+      <div class="field"><label>Date</label><input type="text" id="f_date" value="${post ? post.date : new Date().toISOString().slice(0, 10)}" placeholder="YYYY-MM-DD"></div>
+    </div>
+    <div class="field">
+      <label>Thumbnail</label>
+      <input type="file" id="f_thumb" accept="image/*">
+      <div class="img-thumbs" id="imgThumbs"></div>
+    </div>
+    <div class="field"><label>Content</label><div id="quillContainer" style="background:#fff"></div></div>
+    <div class="field" style="margin-top:14px"><label>SEO title</label><input type="text" id="f_seo_title_b" value="${post ? post.seo_title || '' : ''}"></div>
+    <div class="field"><label>SEO description</label><textarea id="f_seo_desc_b" rows="2">${post ? post.seo_desc || '' : ''}</textarea></div>
+    <div class="save-bar">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="saveBlogBtn">${post ? 'Save changes' : 'Publish post'}</button>
+    </div>`;
+
+  quillBlog = new Quill('#quillContainer', { theme: 'snow' });
+  if (post && post.content) quillBlog.root.innerHTML = post.content;
+
+  document.getElementById('f_thumb').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      toast('Uploading thumbnail…');
+      const base64 = await fileToBase64(file);
+      const path = `images/${Date.now()}-${slugify(file.name.replace(/\.[^.]+$/, ''))}${(file.name.match(/\.[^.]+$/) || ['.jpg'])[0]}`;
+      const url = await gh.putImage(path, base64, `Upload thumbnail ${path}`);
+      editingImages = [url];
+      renderImgThumbs();
+      toast('Thumbnail uploaded');
+    } catch (err) {
+      toast('Upload failed: ' + err.message, true);
+    }
+  });
+
+  document.getElementById('saveBlogBtn').addEventListener('click', () => saveBlog(id));
+  renderImgThumbs();
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+
+function autoSlugBlog() {
+  const slugField = document.getElementById('f_slug_b');
+  if (!slugField.dataset.touched) slugField.value = slugify(document.getElementById('f_title').value);
+}
+
+async function saveBlog(id) {
+  const title = document.getElementById('f_title').value.trim();
+  const slug = document.getElementById('f_slug_b').value.trim() || slugify(title);
+  if (!title) { toast('Title is required', true); return; }
+
+  const postObj = {
+    id: id || 'blog-' + Date.now(),
+    title,
+    slug,
+    category: document.getElementById('f_category_b').value,
+    date: document.getElementById('f_date').value,
+    content: quillBlog.root.innerHTML,
+    thumbnail: editingImages[0] || '',
+    seo_title: document.getElementById('f_seo_title_b').value,
+    seo_desc: document.getElementById('f_seo_desc_b').value,
+  };
+
+  const btn = document.getElementById('saveBlogBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    if (id) {
+      const idx = state.blogs.findIndex(b => b.id === id);
+      state.blogs[idx] = postObj;
+    } else {
+      state.blogs.push(postObj);
+    }
+    const res = await gh.putJSON('data/blogs.json', state.blogs, `${id ? 'Update' : 'Add'} post: ${title}`, shas.blogs);
+    shas.blogs = res.content.sha;
+    renderBlogsList();
+    closeModal();
+    toast('Post saved');
+  } catch (err) {
+    toast('Save failed: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+async function deleteBlog(id) {
+  if (!confirm('Delete this post?')) return;
+  state.blogs = state.blogs.filter(b => b.id !== id);
+  try {
+    const res = await gh.putJSON('data/blogs.json', state.blogs, 'Delete post', shas.blogs);
+    shas.blogs = res.content.sha;
+    renderBlogsList();
+    toast('Post deleted');
+  } catch (err) {
+    toast('Delete failed: ' + err.message, true);
+  }
+}
+
+// ============================================================
+// PAGES
+// ============================================================
+function renderPagesList() {
+  const el = document.getElementById('pagesList');
+  el.innerHTML = state.pages.map(p => `
+    <div class="list-row">
+      <div><div class="name">${p.title}</div><div class="sub">${p.slug}</div></div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" onclick="openPageForm('${p.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePage('${p.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('addPageBtn').addEventListener('click', () => openPageForm(null));
+
+function openPageForm(id) {
+  const page = id ? state.pages.find(p => p.id === id) : null;
+
+  document.getElementById('modalBody').innerHTML = `
+    <h3 style="margin-bottom:18px">${page ? 'Edit page' : 'Add page'}</h3>
+    <div class="field"><label>Title</label><input type="text" id="f_ptitle" value="${page ? page.title : ''}" oninput="autoSlugPage()"></div>
+    <div class="field"><label>Slug</label><input type="text" id="f_pslug" value="${page ? page.slug : ''}" oninput="this.dataset.touched=true"></div>
+    <div class="field"><label>Content</label><div id="quillPageContainer" style="background:#fff"></div></div>
+    <div class="field" style="margin-top:14px"><label>SEO title</label><input type="text" id="f_pseo_title" value="${page ? page.seo_title || '' : ''}"></div>
+    <div class="field"><label>SEO description</label><textarea id="f_pseo_desc" rows="2">${page ? page.seo_desc || '' : ''}</textarea></div>
+    <div class="save-bar">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="savePageBtn">${page ? 'Save changes' : 'Publish page'}</button>
+    </div>`;
+
+  quillPage = new Quill('#quillPageContainer', { theme: 'snow' });
+  if (page && page.content) quillPage.root.innerHTML = page.content;
+
+  document.getElementById('savePageBtn').addEventListener('click', () => savePage(id));
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+
+function autoSlugPage() {
+  const slugField = document.getElementById('f_pslug');
+  if (!slugField.dataset.touched) slugField.value = slugify(document.getElementById('f_ptitle').value);
+}
+
+async function savePage(id) {
+  const title = document.getElementById('f_ptitle').value.trim();
+  const slug = document.getElementById('f_pslug').value.trim() || slugify(title);
+  if (!title) { toast('Title is required', true); return; }
+
+  const pageObj = {
+    id: id || 'page-' + Date.now(),
+    title,
+    slug,
+    content: quillPage.root.innerHTML,
+    seo_title: document.getElementById('f_pseo_title').value,
+    seo_desc: document.getElementById('f_pseo_desc').value,
+  };
+
+  const btn = document.getElementById('savePageBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    if (id) {
+      const idx = state.pages.findIndex(p => p.id === id);
+      state.pages[idx] = pageObj;
+    } else {
+      state.pages.push(pageObj);
+    }
+    const res = await gh.putJSON('data/pages.json', state.pages, `${id ? 'Update' : 'Add'} page: ${title}`, shas.pages);
+    shas.pages = res.content.sha;
+    renderPagesList();
+    closeModal();
+    toast('Page saved');
+  } catch (err) {
+    toast('Save failed: ' + err.message, true);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
+}
+
+async function deletePage(id) {
+  if (!confirm('Delete this page?')) return;
+  state.pages = state.pages.filter(p => p.id !== id);
+  try {
+    const res = await gh.putJSON('data/pages.json', state.pages, 'Delete page', shas.pages);
+    shas.pages = res.content.sha;
+    renderPagesList();
+    toast('Page deleted');
+  } catch (err) {
+    toast('Delete failed: ' + err.message, true);
+  }
+}
+
+// ============================================================
+// CATEGORIES
+// ============================================================
+function renderCategoryChips() {
+  document.getElementById('carCatChips').innerHTML = state.categories.car
+    .map((c, i) => `<span class="chip">${c}<button onclick="removeCat('car',${i})">✕</button></span>`).join('');
+  document.getElementById('blogCatChips').innerHTML = state.categories.blog
+    .map((c, i) => `<span class="chip">${c}<button onclick="removeCat('blog',${i})">✕</button></span>`).join('');
+}
+
+document.getElementById('addCarCatBtn').addEventListener('click', () => addCat('car', 'newCarCat'));
+document.getElementById('addBlogCatBtn').addEventListener('click', () => addCat('blog', 'newBlogCat'));
+
+async function addCat(type, inputId) {
+  const input = document.getElementById(inputId);
+  const val = input.value.trim();
+  if (!val) return;
+  if (state.categories[type].includes(val)) { toast('Category already exists', true); return; }
+  state.categories[type].push(val);
+  input.value = '';
+  await saveCategories();
+}
+
+async function removeCat(type, idx) {
+  state.categories[type].splice(idx, 1);
+  await saveCategories();
+}
+
+async function saveCategories() {
+  try {
+    const res = await gh.putJSON('data/categories.json', state.categories, 'Update categories', shas.categories);
+    shas.categories = res.content.sha;
+    renderCategoryChips();
+    toast('Categories updated');
+  } catch (err) {
+    toast('Save failed: ' + err.message, true);
+  }
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function fillSettingsForm() {
+  const s = state.settings;
+  document.getElementById('s_website_name').value = s.website_name || '';
+  document.getElementById('s_site_url').value = s.site_url || '';
+  document.getElementById('s_global_seo_title').value = s.global_seo_title || '';
+  document.getElementById('s_global_seo_desc').value = s.global_seo_desc || '';
+  document.getElementById('s_adsense').value = s.adsense_client_id || '';
+  document.getElementById('s_ads_enabled').checked = !!s.ads_enabled;
+  document.getElementById('s_analytics').value = s.analytics_id || '';
+  document.getElementById('s_search_console').value = s.search_console_meta || '';
+  document.getElementById('s_web3forms').value = s.web3forms_access_key || '';
+  document.getElementById('s_giscus_repo').value = s.giscus_repo || '';
+  document.getElementById('s_giscus_repo_id').value = s.giscus_repo_id || '';
+  document.getElementById('s_giscus_category').value = s.giscus_category || '';
+  document.getElementById('s_giscus_category_id').value = s.giscus_category_id || '';
+}
+
+document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+  state.settings = {
+    website_name: document.getElementById('s_website_name').value,
+    site_url: document.getElementById('s_site_url').value.replace(/\/$/, ''),
+    global_seo_title: document.getElementById('s_global_seo_title').value,
+    global_seo_desc: document.getElementById('s_global_seo_desc').value,
+    adsense_client_id: document.getElementById('s_adsense').value,
+    ads_enabled: document.getElementById('s_ads_enabled').checked,
+    analytics_id: document.getElementById('s_analytics').value,
+    search_console_meta: document.getElementById('s_search_console').value,
+    web3forms_access_key: document.getElementById('s_web3forms').value,
+    giscus_repo: document.getElementById('s_giscus_repo').value,
+    giscus_repo_id: document.getElementById('s_giscus_repo_id').value,
+    giscus_category: document.getElementById('s_giscus_category').value,
+    giscus_category_id: document.getElementById('s_giscus_category_id').value,
+  };
+  try {
+    const res = await gh.putJSON('data/settings.json', state.settings, 'Update settings', shas.settings);
+    shas.settings = res.content.sha;
+    toast('Settings saved');
+  } catch (err) {
+    toast('Save failed: ' + err.message, true);
+  }
+});
+
+document.getElementById('saveRobotsBtn').addEventListener('click', async () => {
+  try {
+    const existing = await gh.getFile('robots.txt');
+    await gh.putText('robots.txt', document.getElementById('robotsTxt').value, 'Update robots.txt', existing ? existing.sha : null);
+    toast('robots.txt saved');
+  } catch (err) {
+    toast('Save failed: ' + err.message, true);
+  }
+});
+
+document.getElementById('saveAdsBtn').addEventListener('click', async () => {
+  try {
+    const existing = await gh.getFile('ads.txt');
+    await gh.putText('ads.txt', document.getElementById('adsTxt').value, 'Update ads.txt', existing ? existing.sha : null);
+    toast('ads.txt saved');
+  } catch (err) {
+    toast('Save failed: ' + err.message, true);
+  }
+});
+
+document.getElementById('regenSitemapBtn').addEventListener('click', async () => {
+  try {
+    const base = (state.settings.site_url || `https://${gh.owner}.github.io/${gh.repo}`).replace(/\/$/, '');
+    const urls = [
+      `${base}/`,
+      `${base}/compare.html`,
+      ...state.cars.map(c => `${base}/cars/${c.slug}/`),
+      ...state.blogs.map(b => `${base}/blog/${b.slug}/`),
+      ...state.pages.map(p => `${base}/pages/${p.slug}/`),
+    ];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(u => `  <url><loc>${u}</loc></url>`).join('\n')}\n</urlset>`;
+    const existing = await gh.getFile('sitemap.xml');
+    await gh.putText('sitemap.xml', xml, 'Regenerate sitemap.xml', existing ? existing.sha : null);
+    toast('sitemap.xml pushed to repo');
+  } catch (err) {
+    toast('Failed: ' + err.message, true);
+  }
+});
+
+// ---------------- Boot ----------------
+tryResumeSession();
+</script>
+</body>
+</html>
