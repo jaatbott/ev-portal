@@ -1,1 +1,24 @@
-[]
+[
+  {
+    "id": "blog-001",
+    "title": "5 Things to Check Before Buying Your First EV in India",
+    "slug": "5-things-before-buying-first-ev-india",
+    "category": "Buying Guide",
+    "date": "2026-07-10",
+    "content": "<p>Buying your first electric car is exciting, but a few checks will save you from surprises later.</p><h2>1. Check real-world range, not just the claimed figure</h2><p>Manufacturers quote range under test conditions. In real Indian traffic and with AC running, expect 15-25% less.</p><h2>2. Look at public charging near you</h2><p>Map the DC fast chargers on your regular routes before you commit.</p><h2>3. Home charging setup</h2><p>Confirm your housing society allows a wall-box installation and check your electrical load.</p>",
+    "thumbnail": "https://images.unsplash.com/photo-1617704548623-340376564e68?q=80&w=1200",
+    "seo_title": "5 Things to Check Before Buying an EV in India (2026)",
+    "seo_desc": "A practical checklist before you buy your first electric car in India — range, charging, and running costs."
+  },
+  {
+    "id": "blog-002",
+    "title": "EV vs Petrol: What's the Real 5-Year Running Cost?",
+    "slug": "ev-vs-petrol-5-year-running-cost",
+    "category": "Comparison",
+    "date": "2026-06-28",
+    "content": "<p>We compare a typical petrol hatchback with an equivalent EV over five years of ownership, including fuel, maintenance and depreciation.</p><h2>Fuel cost per km</h2><p>At current electricity tariffs, most EVs cost roughly one-fifth of petrol per kilometre.</p>",
+    "thumbnail": "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1200",
+    "seo_title": "EV vs Petrol Car: 5-Year Running Cost Compared",
+    "seo_desc": "A full 5-year cost of ownership comparison between electric and petrol cars in India."
+  }
+]
