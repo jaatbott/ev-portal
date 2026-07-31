@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "id": "page-001",
+    "title": "About Us",
+    "slug": "about-us",
+    "content": "<p>We are an independent EV research desk helping Indian car buyers compare electric vehicles on price, range and running cost.</p>",
+    "seo_title": "About Us — EV Portal",
+    "seo_desc": "Learn about our mission to make EV buying simple for Indian car buyers."
+  },
+  {
+    "id": "page-002",
+    "title": "Privacy Policy",
+    "slug": "privacy-policy",
+    "content": "<p>We respect your privacy. This site does not sell personal data. Contact form submissions are used only to respond to your enquiry.</p>",
+    "seo_title": "Privacy Policy — EV Portal",
+    "seo_desc": "Our privacy policy explaining how we handle your data."
+  },
+  {
+    "id": "page-003",
+    "title": "Terms & Conditions",
+    "slug": "terms-conditions",
+    "content": "<p>By using this website you agree to use the information provided for personal, non-commercial reference only. Prices and specifications are indicative and may change.</p>",
+    "seo_title": "Terms & Conditions — EV Portal",
+    "seo_desc": "Terms and conditions for using this website."
+  },
+  {
+    "id": "page-004",
+    "title": "Contact Us",
+    "slug": "contact-us",
+    "content": "<p>Have a question about an EV? Send us a message using the form below and we'll get back to you.</p>",
+    "seo_title": "Contact Us — EV Portal",
+    "seo_desc": "Get in touch with the EV Portal team."
+  }
+]
