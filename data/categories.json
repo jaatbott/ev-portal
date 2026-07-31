@@ -1,0 +1,4 @@
+{
+  "car": ["Hatchback", "SUV", "Sedan", "Luxury"],
+  "blog": ["Buying Guide", "Comparison", "News", "Reviews"]
+}
