@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading… — EV Portal</title>
+<meta name="description" content="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div class="wrap" style="padding-top:28px;max-width:760px" id="content">
+  <p class="mono" style="font-size:12px;color:var(--muted)">Loading article…</p>
+</div>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<script src="js/site.js"></script>
+<script>
+async function init() {
+  const slug = qs('slug');
+  const DB = await loadAllData();
+  const { settings, blogs } = DB;
+  renderHeader(settings);
+  renderFooter(settings);
+  injectSettingsScripts(settings);
+
+  const post = blogs.find(b => b.slug === slug);
+  const content = document.getElementById('content');
+
+  if (!post) {
+    content.innerHTML = `<div class="empty-state"><h3>Post not found</h3><p><a href="index.html#blog" style="color:var(--volt)">Back to blog →</a></p></div>`;
+    return;
+  }
+
+  const prettyUrl = settings.site_url ? `${settings.site_url.replace(/\/$/, '')}/blog/${post.slug}/` : window.location.href;
+  injectSEO({
+    title: post.seo_title || post.title,
+    description: post.seo_desc,
+    image: post.thumbnail,
+    url: prettyUrl,
+    type: 'article',
+  });
+  injectJSONLD(blogArticleSchema(post, settings));
+
+  const date = post.date ? new Date(post.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+  content.innerHTML = `
+    <nav class="mono" style="font-size:12px;color:var(--muted);margin-bottom:18px">
+      <a href="index.html" style="color:var(--muted)">Home</a> / <a href="index.html#blog" style="color:var(--muted)">Blog</a>
+    </nav>
+    <div class="mono" style="font-size:12px;color:var(--volt);text-transform:uppercase;letter-spacing:.06em">${post.category || 'News'} · ${date}</div>
+    <h1 style="margin-top:10px">${post.title}</h1>
+    ${post.thumbnail ? `<img src="${post.thumbnail}" alt="${post.title}" style="width:100%;border-radius:16px;margin:20px 0">` : ''}
+    <div class="prose">${post.content || ''}</div>
+    <div class="ad-slot" id="adSlotBlog">Advertisement</div>
+    <div id="giscusThread" style="margin-top:30px"></div>`;
+
+  renderAdSlot(document.getElementById('adSlotBlog'), settings);
+  setupGiscus(settings);
+}
+
+function setupGiscus(settings) {
+  if (!settings.giscus_repo || !settings.giscus_repo_id) return;
+  const s = document.createElement('script');
+  s.src = 'https://giscus.app/client.js';
+  s.setAttribute('data-repo', settings.giscus_repo);
+  s.setAttribute('data-repo-id', settings.giscus_repo_id);
+  s.setAttribute('data-category', settings.giscus_category || 'General');
+  s.setAttribute('data-category-id', settings.giscus_category_id || '');
+  s.setAttribute('data-mapping', 'pathname');
+  s.setAttribute('data-theme', 'light');
+  s.crossOrigin = 'anonymous';
+  s.async = true;
+  document.getElementById('giscusThread').appendChild(s);
+}
+
+init();
+</script>
+</body>
+</html>
