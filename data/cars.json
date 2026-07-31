@@ -1,11 +1,67 @@
 [
   {
-    "id": 1785427152621,
-    "name": "Tata ev ",
-    "brand": "Tata",
-    "range_km": 500,
-    "battery_kwh": 50,
-    "price": "14.99 lakhs",
-    "image": "https://imgd.aeplcdn.com/664x374/n/cw/ec/139585/harrier-ev-exterior-right-front-three-quarter-58.png?isig=0&q=80"
+    "id": "car-001",
+    "name": "Tata Nexon EV",
+    "slug": "tata-nexon-ev",
+    "category": "SUV",
+    "price": 1449000,
+    "range": 465,
+    "battery": "45 kWh",
+    "charging_time": "0-80% in 56 min (DC)",
+    "images": [
+      "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1200",
+      "https://images.unsplash.com/photo-1617469767053-d3b523a0b982?q=80&w=1200"
+    ],
+    "seo_title": "Tata Nexon EV — Price, Range & Specs 2026",
+    "seo_desc": "Tata Nexon EV price, real-world range, battery, charging time and full specifications.",
+    "keywords": "tata nexon ev, nexon ev price, nexon ev range"
+  },
+  {
+    "id": "car-002",
+    "name": "MG Comet EV",
+    "slug": "mg-comet-ev",
+    "category": "Hatchback",
+    "price": 799000,
+    "range": 230,
+    "battery": "17.3 kWh",
+    "charging_time": "0-100% in 7 hrs (AC)",
+    "images": [
+      "https://images.unsplash.com/photo-1617704548623-340376564e68?q=80&w=1200"
+    ],
+    "seo_title": "MG Comet EV — Price, Range & Specs 2026",
+    "seo_desc": "MG Comet EV price, city range, battery capacity and charging details.",
+    "keywords": "mg comet ev, comet ev price"
+  },
+  {
+    "id": "car-003",
+    "name": "Hyundai Ioniq 5",
+    "slug": "hyundai-ioniq-5",
+    "category": "SUV",
+    "price": 4665000,
+    "range": 631,
+    "battery": "72.6 kWh",
+    "charging_time": "0-80% in 18 min (DC ultra-fast)",
+    "images": [
+      "https://images.unsplash.com/photo-1626668893632-6f3a4466d22f?q=80&w=1200"
+    ],
+    "seo_title": "Hyundai Ioniq 5 — Price, Range & Specs 2026",
+    "seo_desc": "Hyundai Ioniq 5 price, long range battery, ultra-fast charging and specifications.",
+    "keywords": "hyundai ioniq 5, ioniq 5 price, ioniq 5 range"
+  },
+  {
+    "id": "car-004",
+    "name": "Tata Punch EV",
+    "slug": "tata-punch-ev",
+    "category": "SUV",
+    "price": 1099000,
+    "range": 421,
+    "battery": "35 kWh",
+    "charging_time": "0-80% in 56 min (DC)",
+    "images": [
+      "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=1200"
+    ],
+    "seo_title": "Tata Punch EV — Price, Range & Specs 2026",
+    "seo_desc": "Tata Punch EV micro-SUV price, range, battery and charging specifications.",
+    "keywords": "tata punch ev, punch ev price"
   }
 ]
