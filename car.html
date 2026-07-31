@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading… — EV Portal</title>
+<meta name="description" content="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div class="wrap" style="padding-top:28px" id="content">
+  <p class="mono" style="font-size:12px;color:var(--muted)">Loading car details…</p>
+</div>
+
+<footer class="site-footer" id="site-footer"></footer>
+
+<script src="js/site.js"></script>
+<script>
+async function init() {
+  const slug = qs('slug');
+  const DB = await loadAllData();
+  const { settings, cars } = DB;
+  renderHeader(settings);
+  renderFooter(settings);
+  injectSettingsScripts(settings);
+
+  const car = cars.find(c => c.slug === slug);
+  const content = document.getElementById('content');
+
+  if (!car) {
+    content.innerHTML = `<div class="empty-state"><h3>Car not found</h3><p>It may have been removed. <a href="index.html" style="color:var(--volt)">Browse all EVs →</a></p></div>`;
+    injectSEO({ title: 'Car not found — ' + (settings.website_name || 'EV Portal'), description: 'This listing is not available.' });
+    return;
+  }
+
+  const prettyUrl = settings.site_url ? `${settings.site_url.replace(/\/$/, '')}/cars/${car.slug}/` : window.location.href;
+  injectSEO({
+    title: car.seo_title || `${car.name} — Price, Range & Specs`,
+    description: car.seo_desc,
+    image: (car.images || [])[0],
+    url: prettyUrl,
+    type: 'product',
+  });
+  injectJSONLD(carProductSchema(car, settings));
+  injectJSONLD(breadcrumbSchema([
+    { name: 'Home', url: location.origin + '/index.html' },
+    { name: car.name, url: location.href },
+  ]));
+
+  const images = car.images && car.images.length ? car.images : ['https://placehold.co/900x560?text=EV'];
+
+  content.innerHTML = `
+    <nav class="mono" style="font-size:12px;color:var(--muted);margin-bottom:18px">
+      <a href="index.html" style="color:var(--muted)">Home</a> / <span style="color:var(--ink)">${car.name}</span>
+    </nav>
+    <div class="detail-grid">
+      <div>
+        <div class="gallery-main"><img id="mainImg" src="${images[0]}" alt="${car.name}"></div>
+        <div class="gallery-thumbs" id="thumbs">
+          ${images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}" onclick="swapImg('${img}', this)">`).join('')}
+        </div>
+        <h1 style="margin-top:28px">${car.name}</h1>
+        <span class="badge">${car.category || 'EV'}</span>
+        <div class="prose" style="margin-top:20px">
+          <h2>Overview</h2>
+          <p>${car.seo_desc || ''}</p>
+        </div>
+        <div id="giscusThread" style="margin-top:36px"></div>
+      </div>
+      <aside class="spec-panel">
+        <div class="spec-price">${fmtPrice(car.price)} <small>ex-showroom, onwards</small></div>
+        <div class="spec-row"><span class="k">Range</span><span class="v">${car.range || '—'} km</span></div>
+        <div class="spec-row"><span class="k">Battery</span><span class="v">${car.battery || '—'}</span></div>
+        <div class="spec-row"><span class="k">Charging time</span><span class="v">${car.charging_time || '—'}</span></div>
+        <a class="btn btn-primary btn-block" style="margin-top:18px" href="compare.html?a=${car.slug}">Compare this car</a>
+
+        <div class="emi-box">
+          <h4>EMI Calculator</h4>
+          <div class="emi-row"><span>Down payment</span><span id="dpVal" class="mono"></span></div>
+          <input type="range" id="dpRange" min="0" max="90" value="20">
+          <div class="emi-row" style="margin-top:14px"><span>Loan tenure</span><span id="tenureVal" class="mono"></span></div>
+          <input type="range" id="tenureRange" min="1" max="7" value="5">
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(43,95,255,.15)">
+            <div class="emi-row"><span>Estimated EMI</span></div>
+            <div class="out" id="emiOut">₹0 / mo</div>
+            <p style="font-size:11.5px;color:var(--ink-soft);margin-top:6px">At 9% p.a. Indicative only — confirm with your lender.</p>
+          </div>
+        </div>
+      </aside>
+    </div>`;
+
+  setupEMI(car.price);
+  setupGiscus(settings);
+}
+
+function swapImg(src, el) {
+  document.getElementById('mainImg').src = src;
+  document.querySelectorAll('#thumbs img').forEach(i => i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function setupEMI(price) {
+  const dpRange = document.getElementById('dpRange');
+  const tenureRange = document.getElementById('tenureRange');
+  const rate = 0.09;
+
+  function calc() {
+    const dpPct = Number(dpRange.value);
+    const years = Number(tenureRange.value);
+    document.getElementById('dpVal').textContent = dpPct + '%';
+    document.getElementById('tenureVal').textContent = years + (years === 1 ? ' year' : ' years');
+    const principal = price * (1 - dpPct / 100);
+    const r = rate / 12;
+    const n = years * 12;
+    const emi = principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+    document.getElementById('emiOut').textContent = `₹${Math.round(emi).toLocaleString('en-IN')} / mo`;
+  }
+  dpRange.addEventListener('input', calc);
+  tenureRange.addEventListener('input', calc);
+  calc();
+}
+
+function setupGiscus(settings) {
+  if (!settings.giscus_repo || !settings.giscus_repo_id) return;
+  const s = document.createElement('script');
+  s.src = 'https://giscus.app/client.js';
+  s.setAttribute('data-repo', settings.giscus_repo);
+  s.setAttribute('data-repo-id', settings.giscus_repo_id);
+  s.setAttribute('data-category', settings.giscus_category || 'General');
+  s.setAttribute('data-category-id', settings.giscus_category_id || '');
+  s.setAttribute('data-mapping', 'pathname');
+  s.setAttribute('data-theme', 'light');
+  s.crossOrigin = 'anonymous';
+  s.async = true;
+  document.getElementById('giscusThread').appendChild(s);
+}
+
+init();
+</script>
+</body>
+</html>
