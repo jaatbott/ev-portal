@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compare Electric Cars — EV Portal</title>
+<meta name="description" content="Compare electric cars side by side on price, range, battery and charging time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header" id="site-header"></header>
+
+<div class="wrap" style="padding-top:36px">
+  <h1>Compare electric cars</h1>
+  <p style="color:var(--ink-soft);margin-bottom:26px">Pick any two EVs to see price, range, battery and charging specs side by side.</p>
+
+  <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;max-width:640px" id="pickers"></div>
+
+  <div style="overflow:auto;margin-top:32px">
+    <table class="compare-table" id="compareTable" style="display:none;min-width:520px">
+      <thead><tr><th>Spec</th><th id="colA"></th><th id="colB"></th></tr></thead>
+      <tbody id="compareBody"></tbody>
+    </table>
+  </div>
+  <div class="empty-state" id="emptyState"><h3>Choose two cars above</h3><p>Comparison will appear here.</p></div>
+</div>
+
+<footer class="site-footer" id="site-footer" style="margin-top:40px"></footer>
+
+<script src="js/site.js"></script>
+<script>
+let cars = [];
+
+async function init() {
+  const DB = await loadAllData();
+  cars = DB.cars;
+  renderHeader(DB.settings);
+  renderFooter(DB.settings);
+  injectSettingsScripts(DB.settings);
+
+  const presetA = qs('a');
+  const presetB = qs('b');
+
+  document.getElementById('pickers').innerHTML = `
+    <div class="compare-picker"><select id="carA">${optionsHTML(presetA)}</select></div>
+    <div class="compare-picker"><select id="carB">${optionsHTML(presetB)}</select></div>`;
+
+  document.getElementById('carA').addEventListener('change', render);
+  document.getElementById('carB').addEventListener('change', render);
+
+  if (presetA || cars.length >= 2) {
+    if (!presetB && cars.length >= 2) document.getElementById('carB').value = cars[1].slug;
+    render();
+  }
+}
+
+function optionsHTML(preset) {
+  return '<option value="">Select a car…</option>' + cars
+    .map(c => `<option value="${c.slug}" ${c.slug === preset ? 'selected' : ''}>${c.name}</option>`)
+    .join('');
+}
+
+function render() {
+  const a = cars.find(c => c.slug === document.getElementById('carA').value);
+  const b = cars.find(c => c.slug === document.getElementById('carB').value);
+  const table = document.getElementById('compareTable');
+  const empty = document.getElementById('emptyState');
+
+  if (!a || !b) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  table.style.display = 'table';
+  empty.style.display = 'none';
+
+  document.getElementById('colA').textContent = a.name;
+  document.getElementById('colB').textContent = b.name;
+
+  const rows = [
+    ['Price', fmtPrice(a.price), fmtPrice(b.price)],
+    ['Range', `${a.range} km`, `${b.range} km`],
+    ['Battery', a.battery, b.battery],
+    ['Charging time', a.charging_time, b.charging_time],
+    ['Category', a.category, b.category],
+  ];
+  document.getElementById('compareBody').innerHTML = rows
+    .map(([label, va, vb]) => `<tr><td>${label}</td><td class="mono-cell">${va || '—'}</td><td class="mono-cell">${vb || '—'}</td></tr>`)
+    .join('');
+}
+
+init();
+</script>
+</body>
+</html>
