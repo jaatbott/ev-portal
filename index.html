@@ -1,117 +1,118 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EV Duniya - Latest Electric Cars & News</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loading… — EV Portal</title>
+<meta name="description" content="">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-gray-50 font-sans text-gray-800">
+<body>
 
-    <!-- Navigation Bar -->
-    <nav class="bg-slate-900 text-white p-4 shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 id="brand-title" class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400">
-                EV Duniya
-            </h1>
-        </div>
-    </nav>
+<header class="site-header" id="site-header"></header>
 
-    <!-- Main Content Area -->
-    <div class="container mx-auto p-6 md:p-10">
-        
-        <!-- Hero Section -->
-        <div class="text-center mb-12">
-            <h2 class="text-4xl font-bold mb-3">Explore Electric Vehicles</h2>
-            <p id="seo-desc" class="text-gray-500 max-w-xl mx-auto">Find the perfect electric car and read the latest EV news and reviews.</p>
-        </div>
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">⚡ INDIA'S EV GUIDE — UPDATED WEEKLY</div>
+    <h1 id="heroTitle">Every electric car in India, compared on real numbers.</h1>
+    <p class="lead">Price, range, battery and charging time — laid out plainly so you can decide without the sales pitch.</p>
+    <form class="hero-search" onsubmit="event.preventDefault(); document.getElementById('carSearch').value=this.q.value; filterCars();">
+      <input type="text" id="carSearch" name="q" placeholder="Search cars — e.g. Nexon, Ioniq, under 15 lakh">
+      <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+  </div>
+</section>
 
-        <!-- Cars Section -->
-        <h3 class="text-2xl font-bold mb-6 border-b pb-2">Latest Electric Cars</h3>
-        <div id="car-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-            <p class="text-center text-gray-500 col-span-full animate-pulse">Loading cars...</p>
-        </div>
-
-        <!-- Blogs Section -->
-        <h3 class="text-2xl font-bold mb-6 border-b pb-2">Latest EV News & Blogs</h3>
-        <div id="blog-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <p class="text-center text-gray-500 col-span-full animate-pulse">Loading blogs...</p>
-        </div>
-
+<section class="section" id="cars">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Electric cars</h2>
+      <a class="view-all" href="compare.html">Compare two cars →</a>
     </div>
+    <div class="grid grid-4" id="carsGrid">
+      <div class="card"><div class="card-media skeleton"></div><div class="card-body"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:40%"></div></div></div>
+      <div class="card"><div class="card-media skeleton"></div><div class="card-body"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:40%"></div></div></div>
+      <div class="card"><div class="card-media skeleton"></div><div class="card-body"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:40%"></div></div></div>
+      <div class="card"><div class="card-media skeleton"></div><div class="card-body"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:40%"></div></div></div>
+    </div>
+  </div>
+</section>
 
-    <!-- JavaScript to Load Data -->
-    <script>
-        async function loadWebsiteData() {
-            const timestamp = '?t=' + new Date().getTime();
-            
-            // 1. Load Settings
-            try {
-                const resSettings = await fetch('data/settings.json' + timestamp);
-                const settings = await resSettings.json();
-                if(settings.site_name) document.getElementById('brand-title').innerText = settings.site_name;
-                if(settings.seo_description) document.getElementById('seo-desc').innerText = settings.seo_description;
-            } catch(e) { console.log("Settings load error"); }
+<div class="wrap"><div class="ad-slot" id="adSlot1">Advertisement</div></div>
 
-            // 2. Load Cars
-            try {
-                const resCars = await fetch('data/cars.json' + timestamp);
-                const cars = await resCars.json();
-                const carList = document.getElementById('car-list');
-                carList.innerHTML = '';
+<section class="section" id="blog">
+  <div class="wrap">
+    <div class="section-head"><h2>From the blog</h2></div>
+    <div id="blogList"></div>
+  </div>
+</section>
 
-                if (!cars || cars.length === 0) {
-                    carList.innerHTML = '<p class="text-gray-500 col-span-full">No cars added yet.</p>';
-                } else {
-                    cars.forEach(car => {
-                        carList.innerHTML += `
-                            <div class="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition">
-                                <img src="${car.image || 'https://images.unsplash.com/photo-1593941707882-a5bba14938cb?auto=format&fit=crop&w=800&q=80'}" class="w-full h-52 object-cover bg-gray-200">
-                                <div class="p-5">
-                                    <span class="text-xs font-bold text-blue-600 uppercase">${car.brand}</span>
-                                    <h4 class="text-xl font-bold text-gray-900 mb-3">${car.name}</h4>
-                                    <div class="grid grid-cols-2 gap-2 mb-4 text-sm bg-gray-50 p-2.5 rounded border">
-                                        <div>Battery: <b>${car.battery_kwh} kWh</b></div>
-                                        <div>Range: <b>${car.range_km} km</b></div>
-                                    </div>
-                                    <div class="flex justify-between items-center border-t pt-3">
-                                        <span class="text-xs text-gray-500">Price</span>
-                                        <span class="text-lg font-extrabold text-green-600">${car.price}</span>
-                                    </div>
-                                </div>
-                            </div>`;
-                    });
-                }
-            } catch(e) { document.getElementById('car-list').innerHTML = '<p class="text-red-500">Error loading cars.</p>'; }
+<footer class="site-footer" id="site-footer"></footer>
 
-            // 3. Load Blogs
-            try {
-                const resBlogs = await fetch('data/blogs.json' + timestamp);
-                const blogs = await resBlogs.json();
-                const blogList = document.getElementById('blog-list');
-                blogList.innerHTML = '';
+<script src="js/site.js"></script>
+<script>
+let DB = null;
 
-                if (!blogs || blogs.length === 0) {
-                    blogList.innerHTML = '<p class="text-gray-500 col-span-full">No blogs published yet.</p>';
-                } else {
-                    blogs.forEach(blog => {
-                        blogList.innerHTML += `
-                            <div class="bg-white rounded-xl shadow-sm border overflow-hidden hover:shadow-md transition flex flex-col">
-                                <img src="${blog.image || 'https://images.unsplash.com/photo-1558449035-b1e1cb60a22e?auto=format&fit=crop&w=800&q=80'}" class="w-full h-48 object-cover bg-gray-200">
-                                <div class="p-5 flex-1 flex flex-col justify-between">
-                                    <div>
-                                        <span class="text-xs text-gray-400">${blog.date || ''}</span>
-                                        <h4 class="text-lg font-bold text-gray-900 mb-2">${blog.title}</h4>
-                                        <p class="text-gray-600 text-sm line-clamp-3 mb-4">${blog.content}</p>
-                                    </div>
-                                </div>
-                            </div>`;
-                    });
-                }
-            } catch(e) { document.getElementById('blog-list').innerHTML = '<p class="text-red-500">Error loading blogs.</p>'; }
-        }
+async function init() {
+  DB = await loadAllData();
+  const { settings, cars, blogs } = DB;
 
-        loadWebsiteData();
-    </script>
+  renderHeader(settings);
+  renderFooter(settings);
+  injectSettingsScripts(settings);
+
+  injectSEO({
+    title: settings.global_seo_title || 'EV Portal',
+    description: settings.global_seo_desc,
+    url: window.location.href,
+  });
+  injectJSONLD({
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: settings.website_name,
+    url: window.location.origin + window.location.pathname,
+  });
+
+  renderCars(cars);
+  renderBlogs(blogs);
+  renderAdSlot(document.getElementById('adSlot1'), settings);
+}
+
+function renderCars(cars) {
+  const grid = document.getElementById('carsGrid');
+  if (!cars.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>No cars listed yet</h3><p>Add your first EV from the admin panel.</p></div>`;
+    return;
+  }
+  grid.innerHTML = cars.map(carCardHTML).join('');
+}
+
+function filterCars() {
+  const q = (document.getElementById('carSearch').value || '').toLowerCase();
+  const filtered = DB.cars.filter(c =>
+    c.name.toLowerCase().includes(q) || (c.category || '').toLowerCase().includes(q)
+  );
+  renderCars(filtered);
+  document.getElementById('cars').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderBlogs(blogs) {
+  const el = document.getElementById('blogList');
+  if (!blogs.length) {
+    el.innerHTML = `<div class="empty-state"><h3>No posts yet</h3><p>Publish your first article from the admin panel.</p></div>`;
+    return;
+  }
+  el.innerHTML = blogs
+    .slice()
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .map(postCardHTML)
+    .join('');
+}
+
+init();
+</script>
 </body>
 </html>
