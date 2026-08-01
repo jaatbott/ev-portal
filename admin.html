@@ -195,6 +195,7 @@ let state = { cars: [], blogs: [], pages: [], settings: {}, categories: { car: [
 let shas = { cars: null, blogs: null, pages: null, settings: null, categories: null };
 let quillBlog = null, quillPage = null;
 let editingImages = [];
+let editingVariants = [];
 
 // ---------------- Login ----------------
 document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -320,7 +321,7 @@ function renderCarsList() {
   }
   el.innerHTML = state.cars.map(c => `
     <div class="list-row">
-      <div><div class="name">${c.name}</div><div class="sub">${c.slug} · ${fmtINR(c.price)} · ${c.range} km</div></div>
+      <div><div class="name">${c.name}</div><div class="sub">${c.slug} · ${fmtINR(c.price)}${c.variants && c.variants.length > 1 ? ` onwards (${c.variants.length} variants)` : ''} · ${c.range} km</div></div>
       <div class="actions">
         <button class="btn btn-ghost btn-sm" onclick="openCarForm('${c.id}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteCar('${c.id}')">Delete</button>
@@ -335,6 +336,7 @@ document.getElementById('addCarBtn').addEventListener('click', () => openCarForm
 function openCarForm(id) {
   const car = id ? state.cars.find(c => c.id === id) : null;
   editingImages = car ? [...(car.images || [])] : [];
+  editingVariants = car && car.variants ? car.variants.map(v => ({ ...v })) : [];
   const catOptions = state.categories.car.map(c => `<option value="${c}" ${car && car.category === c ? 'selected' : ''}>${c}</option>`).join('');
 
   document.getElementById('modalBody').innerHTML = `
@@ -343,13 +345,21 @@ function openCarForm(id) {
     <div class="field"><label>Slug</label><input type="text" id="f_slug" value="${car ? car.slug : ''}" oninput="this.dataset.touched=true"></div>
     <div class="field-row">
       <div class="field"><label>Category</label><select id="f_category"><option value="">Select…</option>${catOptions}</select></div>
-      <div class="field"><label>Price (₹)</label><input type="number" id="f_price" value="${car ? car.price : ''}"></div>
+      <div class="field"><label>Price (₹) <span style="font-weight:400;color:var(--muted)">— used only if no variants below</span></label><input type="number" id="f_price" value="${car ? car.price : ''}"></div>
     </div>
     <div class="field-row">
       <div class="field"><label>Range (km)</label><input type="number" id="f_range" value="${car ? car.range : ''}"></div>
       <div class="field"><label>Battery</label><input type="text" id="f_battery" value="${car ? car.battery : ''}"></div>
     </div>
-    <div class="field"><label>Charging time</label><input type="text" id="f_charging" value="${car ? car.charging_time : ''}"></div>
+    <div class="field"><label>Charging time (base variant)</label><input type="text" id="f_charging" value="${car ? car.charging_time : ''}"></div>
+
+    <div class="field">
+      <label>Variants <span style="font-weight:400;color:var(--muted)">(like CarDekho — different trims at different prices)</span></label>
+      <div id="variantRows"></div>
+      <button type="button" class="btn btn-ghost btn-sm" id="addVariantBtn" style="margin-top:8px">+ Add variant</button>
+      <p class="helper">Leave empty to sell this car as a single price/spec (no variant table shown).</p>
+    </div>
+
     <div class="field">
       <label>Images</label>
       <input type="file" id="f_images" accept="image/*" multiple>
@@ -366,8 +376,34 @@ function openCarForm(id) {
 
   document.getElementById('f_images').addEventListener('change', handleImageUpload);
   document.getElementById('saveCarBtn').addEventListener('click', () => saveCar(id));
+  document.getElementById('addVariantBtn').addEventListener('click', () => {
+    editingVariants.push({ id: 'var-' + Date.now(), name: '', price: '', range: '', battery: '', charging_time: '' });
+    renderVariantRows();
+  });
   renderImgThumbs();
+  renderVariantRows();
   document.getElementById('modalBackdrop').classList.add('open');
+}
+
+function renderVariantRows() {
+  const el = document.getElementById('variantRows');
+  if (!editingVariants.length) {
+    el.innerHTML = `<p class="helper" style="margin-top:8px">No variants added — car will show one price/spec.</p>`;
+    return;
+  }
+  el.innerHTML = editingVariants.map((v, i) => `
+    <div style="border:1px solid var(--line);border-radius:8px;padding:12px;margin-top:10px">
+      <div class="field-row">
+        <div class="field" style="margin-bottom:8px"><label>Variant name</label><input type="text" value="${v.name || ''}" oninput="editingVariants[${i}].name=this.value"></div>
+        <div class="field" style="margin-bottom:8px"><label>Price (₹)</label><input type="number" value="${v.price || ''}" oninput="editingVariants[${i}].price=this.value"></div>
+      </div>
+      <div class="field-row">
+        <div class="field" style="margin-bottom:8px"><label>Range (km)</label><input type="number" value="${v.range || ''}" oninput="editingVariants[${i}].range=this.value"></div>
+        <div class="field" style="margin-bottom:8px"><label>Battery</label><input type="text" value="${v.battery || ''}" oninput="editingVariants[${i}].battery=this.value"></div>
+      </div>
+      <div class="field" style="margin-bottom:4px"><label>Charging time</label><input type="text" value="${v.charging_time || ''}" oninput="editingVariants[${i}].charging_time=this.value"></div>
+      <button type="button" class="btn btn-danger btn-sm" style="margin-top:6px" onclick="editingVariants.splice(${i},1);renderVariantRows()">Remove variant</button>
+    </div>`).join('');
 }
 
 function autoSlug() {
@@ -403,15 +439,32 @@ async function saveCar(id) {
   const slug = document.getElementById('f_slug').value.trim() || slugify(name);
   if (!name) { toast('Car name is required', true); return; }
 
+  const cleanVariants = editingVariants
+    .filter(v => v.name && v.price)
+    .map(v => ({ id: v.id, name: v.name, price: Number(v.price) || 0, range: Number(v.range) || 0, battery: v.battery || '', charging_time: v.charging_time || '' }));
+
+  let basePrice = Number(document.getElementById('f_price').value) || 0;
+  let baseRange = Number(document.getElementById('f_range').value) || 0;
+  let baseBattery = document.getElementById('f_battery').value;
+  let baseCharging = document.getElementById('f_charging').value;
+  if (cleanVariants.length) {
+    const cheapest = cleanVariants.reduce((min, v) => (v.price < min.price ? v : min), cleanVariants[0]);
+    basePrice = cheapest.price;
+    baseRange = cheapest.range;
+    baseBattery = cheapest.battery;
+    baseCharging = cheapest.charging_time;
+  }
+
   const carObj = {
     id: id || 'car-' + Date.now(),
     name,
     slug,
     category: document.getElementById('f_category').value,
-    price: Number(document.getElementById('f_price').value) || 0,
-    range: Number(document.getElementById('f_range').value) || 0,
-    battery: document.getElementById('f_battery').value,
-    charging_time: document.getElementById('f_charging').value,
+    price: basePrice,
+    range: baseRange,
+    battery: baseBattery,
+    charging_time: baseCharging,
+    variants: cleanVariants,
     images: editingImages,
     seo_title: document.getElementById('f_seo_title').value,
     seo_desc: document.getElementById('f_seo_desc').value,
