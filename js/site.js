@@ -66,6 +66,11 @@ function injectJSONLD(obj) {
 }
 
 function carProductSchema(car, settings) {
+  const variants = carVariants(car);
+  const prices = variants.map(v => Number(v.price)).filter(n => !isNaN(n));
+  const offers = prices.length > 1
+    ? { '@type': 'AggregateOffer', priceCurrency: 'INR', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length, availability: 'https://schema.org/InStock', url: window.location.href }
+    : { '@type': 'Offer', priceCurrency: 'INR', price: carBasePrice(car), availability: 'https://schema.org/InStock', url: window.location.href };
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -73,15 +78,9 @@ function carProductSchema(car, settings) {
     image: car.images || [],
     description: car.seo_desc || car.name,
     brand: { '@type': 'Brand', name: (car.name || '').split(' ')[0] },
-    offers: {
-      '@type': 'Offer',
-      priceCurrency: 'INR',
-      price: car.price,
-      availability: 'https://schema.org/InStock',
-      url: window.location.href,
-    },
+    offers,
     additionalProperty: [
-      { '@type': 'PropertyValue', name: 'Range', value: `${car.range} km` },
+      { '@type': 'PropertyValue', name: 'Range', value: `${carMaxRange(car)} km` },
       { '@type': 'PropertyValue', name: 'Battery', value: car.battery },
       { '@type': 'PropertyValue', name: 'Charging Time', value: car.charging_time },
     ],
@@ -218,18 +217,36 @@ function rangePct(km) {
   return Math.max(6, Math.min(100, Math.round((Number(km) / max) * 100)));
 }
 
+// ---------- Variant helpers ----------
+// A car with no variants behaves like a single-variant car built from its
+// own top-level fields, so every place that reads variants keeps working.
+function carVariants(car) {
+  if (car.variants && car.variants.length) return car.variants;
+  return [{ id: 'base', name: 'Standard', price: car.price, range: car.range, battery: car.battery, charging_time: car.charging_time }];
+}
+function carBasePrice(car) {
+  const prices = carVariants(car).map(v => Number(v.price)).filter(n => !isNaN(n));
+  return prices.length ? Math.min(...prices) : car.price;
+}
+function carMaxRange(car) {
+  const ranges = carVariants(car).map(v => Number(v.range)).filter(n => !isNaN(n));
+  return ranges.length ? Math.max(...ranges) : car.range;
+}
+
 function carCardHTML(car) {
   const img = (car.images && car.images[0]) || 'https://placehold.co/480x360?text=EV';
+  const basePrice = carBasePrice(car);
+  const maxRange = carMaxRange(car);
   return `
   <a class="card" href="car.html?slug=${encodeURIComponent(car.slug)}">
     <div class="card-media"><img src="${img}" alt="${car.name}" loading="lazy"></div>
     <div class="card-body">
       <div class="card-cat">${car.category || 'EV'}</div>
       <h3>${car.name}</h3>
-      <div class="price">${fmtPrice(car.price)} <small>onwards</small></div>
+      <div class="price">${fmtPrice(basePrice)} <small>onwards</small></div>
       <div class="readout">
-        <div class="bar"><span style="width:${rangePct(car.range)}%"></span></div>
-        <div class="val">${car.range || '—'} km</div>
+        <div class="bar"><span style="width:${rangePct(maxRange)}%"></span></div>
+        <div class="val">${maxRange || '—'} km</div>
       </div>
     </div>
   </a>`;
