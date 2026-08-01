@@ -13,6 +13,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,7 +36,5 @@ jobs:
           git push
 
       - name: Notify Google Indexing API (optional)
-        if: ${{ secrets.GOOGLE_INDEXING_KEY != '' }}
-        env:
-          GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
+        if: ${{ env.GOOGLE_INDEXING_KEY != '' }}
         run: node submit-to-google.js
