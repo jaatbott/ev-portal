@@ -33,7 +33,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html cars blog pages sitemap.xml
           git diff --staged --quiet || git commit -m "Auto-build static pages [skip build]"
-          git push
+          git push origin HEAD:main
 
       - name: Notify Google Indexing API (optional)
         if: ${{ env.GOOGLE_INDEXING_KEY != '' }}
