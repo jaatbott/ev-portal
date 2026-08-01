@@ -3,116 +3,102 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Loading… — EV Portal</title>
-<meta name="description" content="">
-<meta name="robots" content="index, follow">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<title>EV Portal</title>
+  <meta name="description" content="">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="EV Portal">
+  <meta property="og:description" content="">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://yourusername.github.io/ev-portal/"><link rel="canonical" href="https://yourusername.github.io/ev-portal/">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="EV Portal">
+  <meta name="twitter:description" content=""><script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","url":"https://yourusername.github.io/ev-portal"}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+
 </head>
 <body>
+<header class="site-header">
+    <div class="wrap row">
+      <a href="index.html" class="brand"><span class="bolt">⚡</span>EV Portal</a>
+      <nav class="nav" id="mainNav">
+        <a href="index.html#cars">Cars</a>
+        <a href="index.html#blog">Blog</a>
+        <a href="compare.html">Compare</a>
+        <a href="pages/about-us/index.html">About</a>
+        <a href="pages/contact-us/index.html">Contact</a>
+      </nav>
+      <button class="nav-mobile-toggle" id="navToggle" aria-label="Menu">☰</button>
+    </div></header>
+    <script>document.getElementById('navToggle')?.addEventListener('click',()=>document.getElementById('mainNav').classList.toggle('open'));</script>
 
-<header class="site-header" id="site-header"></header>
-
-<section class="hero">
-  <div class="wrap">
-    <div class="eyebrow">⚡ INDIA'S EV GUIDE — UPDATED WEEKLY</div>
-    <h1 id="heroTitle">Every electric car in India, compared on real numbers.</h1>
-    <p class="lead">Price, range, battery and charging time — laid out plainly so you can decide without the sales pitch.</p>
-    <form class="hero-search" onsubmit="event.preventDefault(); document.getElementById('carSearch').value=this.q.value; filterCars();">
-      <input type="text" id="carSearch" name="q" placeholder="Search cars — e.g. Nexon, Ioniq, under 15 lakh">
-      <button class="btn btn-primary" type="submit">Search</button>
-    </form>
-  </div>
-</section>
-
-<section class="section" id="cars">
-  <div class="wrap">
-    <div class="section-head">
-      <h2>Electric cars</h2>
-      <a class="view-all" href="compare.html">Compare two cars →</a>
-    </div>
-    <div class="grid grid-4" id="carsGrid">
-      <div class="card"><div class="card-media skeleton"></div><div class="card-body"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:40%"></div></div></div>
-      <div class="card"><div class="card-media skeleton"></div><div class="card-body"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:40%"></div></div></div>
-      <div class="card"><div class="card-media skeleton"></div><div class="card-body"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:40%"></div></div></div>
-      <div class="card"><div class="card-media skeleton"></div><div class="card-body"><div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div><div class="skeleton" style="height:14px;width:40%"></div></div></div>
-    </div>
-  </div>
-</section>
-
+<section class="hero"><div class="wrap">
+  <div class="eyebrow">⚡ INDIA'S EV GUIDE — UPDATED WEEKLY</div>
+  <h1>Every electric car in India, compared on real numbers.</h1>
+  <p class="lead">Price, range, battery and charging time — laid out plainly so you can decide without the sales pitch.</p>
+  <form class="hero-search" id="heroSearchForm" onsubmit="event.preventDefault();filterCars(this.q.value)">
+    <input type="text" name="q" id="carSearch" placeholder="Search cars — e.g. Nexon, Ioniq, under 15 lakh">
+    <button class="btn btn-primary" type="submit">Search</button>
+  </form>
+</div></section>
+<section class="section" id="cars"><div class="wrap">
+  <div class="section-head"><h2>Electric cars</h2><a class="view-all" href="compare.html">Compare two cars →</a></div>
+  <div class="grid grid-4" id="carsGrid"><a class="card" href="cars/tata-nexon-ev/index.html">
+    <div class="card-media"><img src="https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1200" alt="Tata Nexon EV" loading="lazy"></div>
+    <div class="card-body">
+      <div class="card-cat">SUV</div>
+      <h3>Tata Nexon EV</h3>
+      <div class="price">₹14.49 L <small>onwards</small></div>
+      <div class="readout"><div class="bar"><span style="width:78%"></span></div><div class="val">465 km</div></div>
+    </div></a><a class="card" href="cars/mg-comet-ev/index.html">
+    <div class="card-media"><img src="https://images.unsplash.com/photo-1617704548623-340376564e68?q=80&w=1200" alt="MG Comet EV" loading="lazy"></div>
+    <div class="card-body">
+      <div class="card-cat">Hatchback</div>
+      <h3>MG Comet EV</h3>
+      <div class="price">₹7.99 L <small>onwards</small></div>
+      <div class="readout"><div class="bar"><span style="width:38%"></span></div><div class="val">230 km</div></div>
+    </div></a><a class="card" href="cars/hyundai-ioniq-5/index.html">
+    <div class="card-media"><img src="https://images.unsplash.com/photo-1626668893632-6f3a4466d22f?q=80&w=1200" alt="Hyundai Ioniq 5" loading="lazy"></div>
+    <div class="card-body">
+      <div class="card-cat">SUV</div>
+      <h3>Hyundai Ioniq 5</h3>
+      <div class="price">₹46.65 L <small>onwards</small></div>
+      <div class="readout"><div class="bar"><span style="width:100%"></span></div><div class="val">631 km</div></div>
+    </div></a><a class="card" href="cars/tata-punch-ev/index.html">
+    <div class="card-media"><img src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=1200" alt="Tata Punch EV" loading="lazy"></div>
+    <div class="card-body">
+      <div class="card-cat">SUV</div>
+      <h3>Tata Punch EV</h3>
+      <div class="price">₹10.99 L <small>onwards</small></div>
+      <div class="readout"><div class="bar"><span style="width:70%"></span></div><div class="val">421 km</div></div>
+    </div></a></div>
+</div></section>
 <div class="wrap"><div class="ad-slot" id="adSlot1">Advertisement</div></div>
-
-<section class="section" id="blog">
-  <div class="wrap">
-    <div class="section-head"><h2>From the blog</h2></div>
-    <div id="blogList"></div>
-  </div>
-</section>
-
-<footer class="site-footer" id="site-footer"></footer>
-
-<script src="js/site.js"></script>
+<section class="section" id="blog"><div class="wrap">
+  <div class="section-head"><h2>From the blog</h2></div>
+  <div id="blogList"><div class="empty-state"><h3>No posts yet</h3><p>Publish your first article from the admin panel.</p></div></div>
+</div></section>
 <script>
-let DB = null;
-
-async function init() {
-  DB = await loadAllData();
-  const { settings, cars, blogs } = DB;
-
-  renderHeader(settings);
-  renderFooter(settings);
-  injectSettingsScripts(settings);
-
-  injectSEO({
-    title: settings.global_seo_title || 'EV Portal',
-    description: settings.global_seo_desc,
-    url: window.location.href,
+function filterCars(q){
+  q=(q||'').toLowerCase();
+  document.querySelectorAll('#carsGrid .card').forEach(card=>{
+    const text=card.textContent.toLowerCase();
+    card.style.display = text.includes(q) ? '' : 'none';
   });
-  injectJSONLD({
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: settings.website_name,
-    url: window.location.origin + window.location.pathname,
-  });
-
-  renderCars(cars);
-  renderBlogs(blogs);
-  renderAdSlot(document.getElementById('adSlot1'), settings);
+  document.getElementById('cars').scrollIntoView({behavior:'smooth'});
 }
-
-function renderCars(cars) {
-  const grid = document.getElementById('carsGrid');
-  if (!cars.length) {
-    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>No cars listed yet</h3><p>Add your first EV from the admin panel.</p></div>`;
-    return;
-  }
-  grid.innerHTML = cars.map(carCardHTML).join('');
-}
-
-function filterCars() {
-  const q = (document.getElementById('carSearch').value || '').toLowerCase();
-  const filtered = DB.cars.filter(c =>
-    c.name.toLowerCase().includes(q) || (c.category || '').toLowerCase().includes(q)
-  );
-  renderCars(filtered);
-  document.getElementById('cars').scrollIntoView({ behavior: 'smooth' });
-}
-
-function renderBlogs(blogs) {
-  const el = document.getElementById('blogList');
-  if (!blogs.length) {
-    el.innerHTML = `<div class="empty-state"><h3>No posts yet</h3><p>Publish your first article from the admin panel.</p></div>`;
-    return;
-  }
-  el.innerHTML = blogs
-    .slice()
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .map(postCardHTML)
-    .join('');
-}
-
-init();
 </script>
+<footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-cols">
+        <div><h5>EV Portal</h5><p>India's independent guide to electric cars.</p></div>
+        <div><h5>Explore</h5><a href="index.html#cars">All EVs</a><a href="index.html#blog">Blog</a><a href="compare.html">Compare cars</a></div>
+        <div><h5>Company</h5><a href="pages/about-us/index.html">About us</a><a href="pages/contact-us/index.html">Contact</a></div>
+        <div><h5>Legal</h5><a href="pages/privacy-policy/index.html">Privacy policy</a><a href="pages/terms-conditions/index.html">Terms & conditions</a></div>
+      </div>
+      <div style="border-top:1px solid var(--line);padding-top:18px">© 2026 EV Portal. All rights reserved.</div>
+    </div></footer>
+<script src="js/site.js"></script>
 </body>
 </html>
