@@ -255,7 +255,7 @@ function buildCars() {
   <div class="detail-grid">
     <div>
       <div class="gallery-main"><img id="mainImg" src="${images[0]}" alt="${esc(car.name)}"></div>
-      <div class="gallery-thumbs">${images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}" onclick="document.getElementById('mainImg').src='${img}';document.querySelectorAll('.gallery-thumbs img').forEach(el=>el.classList.remove('active'));this.classList.add('active')">`).join('')}</div>
+      <div class="gallery-thumbs">${images.map((img, i) => `<img src="${img}" alt="${esc(car.name)} photo ${i + 1}" class="${i === 0 ? 'active' : ''}" onclick="document.getElementById('mainImg').src='${img}';document.querySelectorAll('.gallery-thumbs img').forEach(el=>el.classList.remove('active'));this.classList.add('active')">`).join('')}</div>
       <h1 style="margin-top:28px">${esc(car.name)}</h1>
       <span class="badge">${esc(car.category || 'EV')}</span>
       <div class="prose" style="margin-top:20px"><h2>Overview</h2><p>${esc(car.seo_desc || '')}</p></div>
