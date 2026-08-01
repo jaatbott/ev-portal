@@ -8,6 +8,11 @@
     "range": 465,
     "battery": "45 kWh",
     "charging_time": "0-80% in 56 min (DC)",
+    "variants": [
+      { "id": "v1", "name": "Creative 3.3 MW LR", "price": 1449000, "range": 465, "battery": "45 kWh", "charging_time": "0-80% in 56 min (DC)" },
+      { "id": "v2", "name": "Fearless 3.3 MW LR", "price": 1599000, "range": 465, "battery": "45 kWh", "charging_time": "0-80% in 56 min (DC)" },
+      { "id": "v3", "name": "Empowered 7.2 MW LR", "price": 1799000, "range": 465, "battery": "45 kWh", "charging_time": "0-80% in 39 min (DC)" }
+    ],
     "images": [
       "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?q=80&w=1200",
       "https://images.unsplash.com/photo-1617469767053-d3b523a0b982?q=80&w=1200"
@@ -57,6 +62,11 @@
     "range": 421,
     "battery": "35 kWh",
     "charging_time": "0-80% in 56 min (DC)",
+    "variants": [
+      { "id": "v1", "name": "Smart", "price": 1099000, "range": 315, "battery": "25 kWh", "charging_time": "0-80% in 56 min (DC)" },
+      { "id": "v2", "name": "Adventure", "price": 1249000, "range": 421, "battery": "35 kWh", "charging_time": "0-80% in 56 min (DC)" },
+      { "id": "v3", "name": "Empowered+", "price": 1399000, "range": 421, "battery": "35 kWh", "charging_time": "0-80% in 56 min (DC)" }
+    ],
     "images": [
       "https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=1200"
     ],
