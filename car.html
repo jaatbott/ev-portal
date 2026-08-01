@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Loading… — EV Portal</title>
 <meta name="description" content="">
+<meta name="robots" content="noindex, follow">
+<!-- This page is an instant-preview fallback (renders via JS). The pages
+     search engines should index are the static ones built by build.js
+     into /cars/<slug>/ — see README step 6. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -64,7 +68,7 @@ async function init() {
       <div>
         <div class="gallery-main"><img id="mainImg" src="${images[0]}" alt="${car.name}"></div>
         <div class="gallery-thumbs" id="thumbs">
-          ${images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}" onclick="swapImg('${img}', this)">`).join('')}
+          ${images.map((img, i) => `<img src="${img}" alt="${car.name} photo ${i + 1}" class="${i === 0 ? 'active' : ''}" onclick="swapImg('${img}', this)">`).join('')}
         </div>
         <h1 style="margin-top:28px">${car.name}</h1>
         <span class="badge">${car.category || 'EV'}</span>
