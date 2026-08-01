@@ -157,6 +157,14 @@ h1,h2,h3,h4{font-family:var(--font-display);margin:0 0 .4em;line-height:1.15;let
 .spec-row .k{color:var(--ink-soft)}
 .spec-row .v{font-family:var(--font-mono);font-weight:600}
 
+.variant-select{width:100%;padding:11px 12px;border:1px solid var(--line-strong);border-radius:var(--radius);font-size:14px;font-family:var(--font-body);background:#fff;margin-bottom:4px}
+.variant-table-wrap{overflow:auto;margin-top:14px}
+.variant-table{width:100%;border-collapse:collapse;min-width:480px}
+.variant-table th,.variant-table td{padding:12px 14px;border-bottom:1px solid var(--line);text-align:left;font-size:13.5px}
+.variant-table th{font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.variant-table td.mono-cell{font-family:var(--font-mono);font-weight:600}
+.variant-table tr.is-selected{background:var(--volt-soft)}
+
 .prose{font-size:16px;color:var(--ink-soft)}
 .prose h2{font-size:22px;color:var(--ink);margin-top:30px}
 .prose p{margin:0 0 16px}
