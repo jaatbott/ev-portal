@@ -53,6 +53,8 @@ async function init() {
   ]));
 
   const images = car.images && car.images.length ? car.images : ['https://placehold.co/900x560?text=EV'];
+  const variants = carVariants(car);
+  const cheapest = variants.reduce((min, v) => (Number(v.price) < Number(min.price) ? v : min), variants[0]);
 
   content.innerHTML = `
     <nav class="mono" style="font-size:12px;color:var(--muted);margin-bottom:18px">
@@ -70,13 +72,38 @@ async function init() {
           <h2>Overview</h2>
           <p>${car.seo_desc || ''}</p>
         </div>
+
+        ${variants.length > 1 ? `
+        <div style="margin-top:34px">
+          <h2 style="font-size:20px;margin-bottom:14px">All variants</h2>
+          <div class="variant-table-wrap">
+            <table class="variant-table" id="variantTable">
+              <thead><tr><th>Variant</th><th>Price</th><th>Range</th><th>Battery</th><th>Charging</th></tr></thead>
+              <tbody>
+                ${variants.map(v => `
+                  <tr data-vid="${v.id}" class="${v.id === cheapest.id ? 'is-selected' : ''}" onclick="selectVariant('${v.id}')" style="cursor:pointer">
+                    <td>${v.name}</td>
+                    <td class="mono-cell">${fmtPrice(v.price)}</td>
+                    <td class="mono-cell">${v.range || '—'} km</td>
+                    <td class="mono-cell">${v.battery || '—'}</td>
+                    <td class="mono-cell">${v.charging_time || '—'}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>` : ''}
+
         <div id="giscusThread" style="margin-top:36px"></div>
       </div>
       <aside class="spec-panel">
-        <div class="spec-price">${fmtPrice(car.price)} <small>ex-showroom, onwards</small></div>
-        <div class="spec-row"><span class="k">Range</span><span class="v">${car.range || '—'} km</span></div>
-        <div class="spec-row"><span class="k">Battery</span><span class="v">${car.battery || '—'}</span></div>
-        <div class="spec-row"><span class="k">Charging time</span><span class="v">${car.charging_time || '—'}</span></div>
+        ${variants.length > 1 ? `
+        <select class="variant-select" id="variantSelect" onchange="selectVariant(this.value)">
+          ${variants.map(v => `<option value="${v.id}" ${v.id === cheapest.id ? 'selected' : ''}>${v.name}</option>`).join('')}
+        </select>` : ''}
+        <div class="spec-price" id="specPrice">${fmtPrice(cheapest.price)} <small>ex-showroom</small></div>
+        <div class="spec-row"><span class="k">Range</span><span class="v" id="specRange">${cheapest.range || '—'} km</span></div>
+        <div class="spec-row"><span class="k">Battery</span><span class="v" id="specBattery">${cheapest.battery || '—'}</span></div>
+        <div class="spec-row"><span class="k">Charging time</span><span class="v" id="specCharging">${cheapest.charging_time || '—'}</span></div>
         <a class="btn btn-primary btn-block" style="margin-top:18px" href="compare.html?a=${car.slug}">Compare this car</a>
 
         <div class="emi-box">
@@ -94,8 +121,22 @@ async function init() {
       </aside>
     </div>`;
 
-  setupEMI(car.price);
+  window.CURRENT_VARIANTS = variants;
+  setupEMI(cheapest.price);
   setupGiscus(settings);
+}
+
+function selectVariant(id) {
+  const v = window.CURRENT_VARIANTS.find(x => x.id === id);
+  if (!v) return;
+  document.getElementById('specPrice').innerHTML = `${fmtPrice(v.price)} <small>ex-showroom</small>`;
+  document.getElementById('specRange').textContent = `${v.range || '—'} km`;
+  document.getElementById('specBattery').textContent = v.battery || '—';
+  document.getElementById('specCharging').textContent = v.charging_time || '—';
+  const select = document.getElementById('variantSelect');
+  if (select) select.value = id;
+  document.querySelectorAll('#variantTable tr').forEach(tr => tr.classList.toggle('is-selected', tr.dataset.vid === id));
+  updateEMIPrice(v.price);
 }
 
 function swapImg(src, el) {
@@ -104,25 +145,33 @@ function swapImg(src, el) {
   el.classList.add('active');
 }
 
+let emiPrice = 0;
 function setupEMI(price) {
+  emiPrice = price;
   const dpRange = document.getElementById('dpRange');
   const tenureRange = document.getElementById('tenureRange');
-  const rate = 0.09;
 
-  function calc() {
-    const dpPct = Number(dpRange.value);
-    const years = Number(tenureRange.value);
-    document.getElementById('dpVal').textContent = dpPct + '%';
-    document.getElementById('tenureVal').textContent = years + (years === 1 ? ' year' : ' years');
-    const principal = price * (1 - dpPct / 100);
-    const r = rate / 12;
-    const n = years * 12;
-    const emi = principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
-    document.getElementById('emiOut').textContent = `₹${Math.round(emi).toLocaleString('en-IN')} / mo`;
-  }
-  dpRange.addEventListener('input', calc);
-  tenureRange.addEventListener('input', calc);
-  calc();
+  dpRange.addEventListener('input', calcEMI);
+  tenureRange.addEventListener('input', calcEMI);
+  calcEMI();
+}
+
+function updateEMIPrice(price) {
+  emiPrice = price;
+  calcEMI();
+}
+
+function calcEMI() {
+  const rate = 0.09;
+  const dpPct = Number(document.getElementById('dpRange').value);
+  const years = Number(document.getElementById('tenureRange').value);
+  document.getElementById('dpVal').textContent = dpPct + '%';
+  document.getElementById('tenureVal').textContent = years + (years === 1 ? ' year' : ' years');
+  const principal = emiPrice * (1 - dpPct / 100);
+  const r = rate / 12;
+  const n = years * 12;
+  const emi = principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+  document.getElementById('emiOut').textContent = `₹${Math.round(emi).toLocaleString('en-IN')} / mo`;
 }
 
 function setupGiscus(settings) {
