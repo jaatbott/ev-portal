@@ -33,6 +33,20 @@ function fmtPrice(v) {
 function rangePct(km) { return Math.max(6, Math.min(100, Math.round((Number(km) / 600) * 100))); }
 function rootPath(depth) { return depth === 0 ? '' : '../'.repeat(depth); }
 
+// ---------- Variant helpers (mirrors js/site.js) ----------
+function carVariants(car) {
+  if (car.variants && car.variants.length) return car.variants;
+  return [{ id: 'base', name: 'Standard', price: car.price, range: car.range, battery: car.battery, charging_time: car.charging_time }];
+}
+function carBasePrice(car) {
+  const prices = carVariants(car).map(v => Number(v.price)).filter(n => !isNaN(n));
+  return prices.length ? Math.min(...prices) : car.price;
+}
+function carMaxRange(car) {
+  const ranges = carVariants(car).map(v => Number(v.range)).filter(n => !isNaN(n));
+  return ranges.length ? Math.max(...ranges) : car.range;
+}
+
 function siteUrl() {
   // Prefer settings.json (set from the admin panel — always up to date),
   // fall back to package.json "homepage" if that's the only place it's set.
@@ -129,13 +143,15 @@ ${footerHTML(root, s)}
 // ---------- cards ----------
 function carCardHTML(car, root) {
   const img = (car.images && car.images[0]) || 'https://placehold.co/480x360?text=EV';
+  const basePrice = carBasePrice(car);
+  const maxRange = carMaxRange(car);
   return `<a class="card" href="${root}cars/${car.slug}/index.html">
     <div class="card-media"><img src="${img}" alt="${esc(car.name)}" loading="lazy"></div>
     <div class="card-body">
       <div class="card-cat">${esc(car.category || 'EV')}</div>
       <h3>${esc(car.name)}</h3>
-      <div class="price">${fmtPrice(car.price)} <small>onwards</small></div>
-      <div class="readout"><div class="bar"><span style="width:${rangePct(car.range)}%"></span></div><div class="val">${esc(car.range) || '—'} km</div></div>
+      <div class="price">${fmtPrice(basePrice)} <small>onwards</small></div>
+      <div class="readout"><div class="bar"><span style="width:${rangePct(maxRange)}%"></span></div><div class="val">${esc(maxRange) || '—'} km</div></div>
     </div></a>`;
 }
 
@@ -205,6 +221,34 @@ function buildCars() {
   cars.forEach((car) => {
     const images = car.images && car.images.length ? car.images : ['https://placehold.co/900x560?text=EV'];
     const url = SITE_URL ? `${SITE_URL}/cars/${car.slug}/` : '';
+    const variants = carVariants(car);
+    const cheapest = variants.reduce((min, v) => (Number(v.price) < Number(min.price) ? v : min), variants[0]);
+
+    const variantTable = variants.length > 1 ? `
+      <div style="margin-top:34px">
+        <h2 style="font-size:20px;margin-bottom:14px">All variants</h2>
+        <div class="variant-table-wrap">
+          <table class="variant-table" id="variantTable">
+            <thead><tr><th>Variant</th><th>Price</th><th>Range</th><th>Battery</th><th>Charging</th></tr></thead>
+            <tbody>
+              ${variants.map(v => `
+                <tr data-vid="${v.id}" class="${v.id === cheapest.id ? 'is-selected' : ''}" onclick="selectVariant('${v.id}')" style="cursor:pointer">
+                  <td>${esc(v.name)}</td>
+                  <td class="mono-cell">${fmtPrice(v.price)}</td>
+                  <td class="mono-cell">${esc(v.range) || '—'} km</td>
+                  <td class="mono-cell">${esc(v.battery) || '—'}</td>
+                  <td class="mono-cell">${esc(v.charging_time) || '—'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>` : '';
+
+    const variantSelect = variants.length > 1 ? `
+      <select class="variant-select" id="variantSelect" onchange="selectVariant(this.value)">
+        ${variants.map(v => `<option value="${v.id}" ${v.id === cheapest.id ? 'selected' : ''}>${esc(v.name)}</option>`).join('')}
+      </select>` : '';
+
     const body = `
 <div class="wrap" style="padding-top:28px">
   <nav class="mono" style="font-size:12px;color:var(--muted);margin-bottom:18px"><a href="../../index.html" style="color:var(--muted)">Home</a> / <span style="color:var(--ink)">${esc(car.name)}</span></nav>
@@ -215,13 +259,15 @@ function buildCars() {
       <h1 style="margin-top:28px">${esc(car.name)}</h1>
       <span class="badge">${esc(car.category || 'EV')}</span>
       <div class="prose" style="margin-top:20px"><h2>Overview</h2><p>${esc(car.seo_desc || '')}</p></div>
+      ${variantTable}
       <div id="giscusThread" style="margin-top:36px"></div>
     </div>
     <aside class="spec-panel">
-      <div class="spec-price">${fmtPrice(car.price)} <small>ex-showroom, onwards</small></div>
-      <div class="spec-row"><span class="k">Range</span><span class="v">${esc(car.range) || '—'} km</span></div>
-      <div class="spec-row"><span class="k">Battery</span><span class="v">${esc(car.battery) || '—'}</span></div>
-      <div class="spec-row"><span class="k">Charging time</span><span class="v">${esc(car.charging_time) || '—'}</span></div>
+      ${variantSelect}
+      <div class="spec-price" id="specPrice">${fmtPrice(cheapest.price)} <small>ex-showroom</small></div>
+      <div class="spec-row"><span class="k">Range</span><span class="v" id="specRange">${esc(cheapest.range) || '—'} km</span></div>
+      <div class="spec-row"><span class="k">Battery</span><span class="v" id="specBattery">${esc(cheapest.battery) || '—'}</span></div>
+      <div class="spec-row"><span class="k">Charging time</span><span class="v" id="specCharging">${esc(cheapest.charging_time) || '—'}</span></div>
       <a class="btn btn-primary btn-block" style="margin-top:18px" href="../../compare.html?a=${car.slug}">Compare this car</a>
       <div class="emi-box">
         <h4>EMI Calculator</h4>
@@ -239,18 +285,37 @@ function buildCars() {
   </div>
 </div>
 <script>
+var CURRENT_VARIANTS = ${JSON.stringify(variants)};
+var emiPrice = ${Number(cheapest.price) || 0};
+function calcEMI(){
+  var rate=0.09, dpPct=Number(document.getElementById('dpRange').value), years=Number(document.getElementById('tenureRange').value);
+  document.getElementById('dpVal').textContent=dpPct+'%';
+  document.getElementById('tenureVal').textContent=years+(years===1?' year':' years');
+  var principal=emiPrice*(1-dpPct/100), r=rate/12, n=years*12;
+  var emi=principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+  document.getElementById('emiOut').textContent='₹'+Math.round(emi).toLocaleString('en-IN')+' / mo';
+}
+function selectVariant(id){
+  var v=CURRENT_VARIANTS.find(function(x){return x.id===id});
+  if(!v) return;
+  document.getElementById('specPrice').innerHTML=fmtPriceInline(v.price)+' <small>ex-showroom</small>';
+  document.getElementById('specRange').textContent=(v.range||'—')+' km';
+  document.getElementById('specBattery').textContent=v.battery||'—';
+  document.getElementById('specCharging').textContent=v.charging_time||'—';
+  var sel=document.getElementById('variantSelect'); if(sel) sel.value=id;
+  document.querySelectorAll('#variantTable tr').forEach(function(tr){tr.classList.toggle('is-selected', tr.dataset.vid===id)});
+  emiPrice=Number(v.price)||0;
+  calcEMI();
+}
+function fmtPriceInline(v){
+  var n=Number(v);
+  if(n>=100000) return '₹'+(n/100000).toFixed(2)+' L';
+  return '₹'+n.toLocaleString('en-IN');
+}
 (function(){
-  const price=${Number(car.price) || 0}, rate=0.09;
-  const dp=document.getElementById('dpRange'), tn=document.getElementById('tenureRange');
-  function calc(){
-    const dpPct=Number(dp.value), years=Number(tn.value);
-    document.getElementById('dpVal').textContent=dpPct+'%';
-    document.getElementById('tenureVal').textContent=years+(years===1?' year':' years');
-    const principal=price*(1-dpPct/100), r=rate/12, n=years*12;
-    const emi=principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
-    document.getElementById('emiOut').textContent='₹'+Math.round(emi).toLocaleString('en-IN')+' / mo';
-  }
-  dp.addEventListener('input',calc); tn.addEventListener('input',calc); calc();
+  document.getElementById('dpRange').addEventListener('input',calcEMI);
+  document.getElementById('tenureRange').addEventListener('input',calcEMI);
+  calcEMI();
 })();
 ${giscusScript(settings)}
 </script>`;
@@ -276,13 +341,18 @@ ${giscusScript(settings)}
 }
 
 function carProductSchema(car, url) {
+  const variants = carVariants(car);
+  const prices = variants.map(v => Number(v.price)).filter(n => !isNaN(n));
+  const offers = prices.length > 1
+    ? { '@type': 'AggregateOffer', priceCurrency: 'INR', lowPrice: Math.min(...prices), highPrice: Math.max(...prices), offerCount: prices.length, availability: 'https://schema.org/InStock', url }
+    : { '@type': 'Offer', priceCurrency: 'INR', price: carBasePrice(car), availability: 'https://schema.org/InStock', url };
   return {
     '@context': 'https://schema.org', '@type': 'Product', name: car.name,
     image: car.images || [], description: car.seo_desc || car.name,
     brand: { '@type': 'Brand', name: (car.name || '').split(' ')[0] },
-    offers: { '@type': 'Offer', priceCurrency: 'INR', price: car.price, availability: 'https://schema.org/InStock', url },
+    offers,
     additionalProperty: [
-      { '@type': 'PropertyValue', name: 'Range', value: `${car.range} km` },
+      { '@type': 'PropertyValue', name: 'Range', value: `${carMaxRange(car)} km` },
       { '@type': 'PropertyValue', name: 'Battery', value: car.battery },
       { '@type': 'PropertyValue', name: 'Charging Time', value: car.charging_time },
     ],
