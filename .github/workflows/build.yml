@@ -32,3 +32,9 @@ jobs:
           git add index.html cars blog pages sitemap.xml
           git diff --staged --quiet || git commit -m "Auto-build static pages [skip build]"
           git push
+
+      - name: Notify Google Indexing API (optional)
+        if: ${{ secrets.GOOGLE_INDEXING_KEY != '' }}
+        env:
+          GOOGLE_INDEXING_KEY: ${{ secrets.GOOGLE_INDEXING_KEY }}
+        run: node submit-to-google.js
