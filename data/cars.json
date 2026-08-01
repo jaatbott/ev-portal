@@ -48,9 +48,10 @@
     "slug": "mg-comet-ev",
     "category": "Hatchback",
     "price": 799000,
-    "range": 230,
+    "range": 300,
     "battery": "17.3 kWh",
     "charging_time": "0-100% in 7 hrs (AC)",
+    "variants": [],
     "images": [
       "https://images.unsplash.com/photo-1617704548623-340376564e68?q=80&w=1200"
     ],
